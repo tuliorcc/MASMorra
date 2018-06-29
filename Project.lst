@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.14.26429.4	    06/29/18 17:25:14
+Microsoft (R) Macro Assembler Version 14.14.26429.4	    06/29/18 19:33:12
 MASMorra.asm						     Page 1 - 1
 
 
@@ -21,26 +21,38 @@ MASMorra.asm						     Page 1 - 1
 			      C .LIST
 			      C 
 
- = 00000050			COLS = 80
- = 00000019			ROWS = 25
- = 0000004E			MAPCOLS = (COLS - 2)
- = 00000014			MAPROWS = (ROWS - 5)
+				; Constantes 
+ = 00000050			COLS = 80            ; Colunas do jogo
+ = 00000019			ROWS = 25            ; Linhas do jogo
+ = 0000004E			MAPCOLS = (COLS - 2) ; Colunas do mapa
+ = 00000014			MAPROWS = (ROWS - 5) ; Linhas do mapa
 
+				; Variáveis
  00000000			.data
- 00000000 50			     xMax BYTE COLS
- 00000001 19			     yMax BYTE ROWS
- 00000002  00000618 [		     Map BYTE MAPCOLS*MAPROWS Dup('#')
+				     ; Variáveis da tela
+ 00000000 50			     xMax BYTE COLS      ; número maximo de colunas
+ 00000001 19			     yMax BYTE ROWS      ; númer maximo de linhas
+
+				     ; Mapa
+ 00000002  00000618 [		     Map BYTE MAPCOLS*MAPROWS Dup('#')  ; vetor de (colunas*linhas) posições. 
 	    23
 	   ]
 
+				     ; Variáveis de geração de mapa
+ 0000061A 0000			     emptyCells WORD 0
+ 0000061C 0000			     emptyGoal WORD 0
+ 0000061E 00			     direction BYTE 0    ; Direção do corredor [0-Norte, 1-Leste, 2-Sul, 3-Oeste]
+ 0000061F 0000			     pos WORD 0          ; Ponteiro para a posição atual no mapa (0 - 1559)
 
+
+
+				; Procedimentos
  00000000			.code
-
 				; ==============================================================
 				; LimpaTela PROC
 				; Objetivo: Limpar a tela do jogo em substituição a função CLRSCR do Irvine, esta função apenas escreve o caracter " "(espaço)em toda a matriz que esta contida no jogo
-				; Recebe: Sem parâmetros
-				; Retorna: Sem retorno
+				; Usa:      Sem parâmetros
+				; Retorna:  Sem retorno
 				; ==============================================================
  00000000			LimpaTela PROC
  00000000  B8 00000000		     mov eax, black + (black * 16)      ; Para a função SETTEXTCOLOR deve ser passado al, onde os 4 bits HSB é a cor de fundo e os 4 LSB são a cor da letra, a multiplicação por 16 é equivalente a dar um shift de 4 bits para a esquerda
@@ -77,7 +89,7 @@ MASMorra.asm						     Page 1 - 1
 				; ==============================================================
 				; Bordas PROC
 				; Objetivo: Desenha as bordas do jogo com o caracter "/" em vermelho
-				; Recebe:   xMax - Quantidade de colunas totais do jogo
+				; Usa:      xMax - Quantidade de colunas totais do jogo
 				;		  yMax - Quantidade de linhas totais do jogo
 				; Retorna: Sem retorno
 				; ==============================================================
@@ -139,42 +151,112 @@ MASMorra.asm						     Page 1 - 1
  000000C6  B2 01		     mov dl, 1
  000000C8  B9 00000014		     mov ecx, MAPROWS
  000000CD  BE 00000002 R	     mov esi, OFFSET map
-				     
- 000000D2			L1:
- 000000D2  80 C6 01		     add dh, 1
- 000000D5  BB 00000000		     mov ebx, 0    
+ 000000D2  BB 00000000		     mov ebx, 0
+ 000000D7			L1:
+ 000000D7  80 C6 01		     add dh, 1
  000000DA  51			     push ecx                 ; Guarda ecx
  000000DB  B9 0000004E		     mov ecx, MAPCOLS         ; ecx = numero de colunas do mapa
  000000E0  E8 00000000 E	     call GOTOXY              ; Função Irvine : Configura o cursor para a linha dh e a coluna dl
  000000E5			L2:
  000000E5  8A 04 1E		     mov al, [esi + ebx]
- 000000E8  E8 00000000 E	     call WriteChar
- 000000ED  43			     inc ebx
- 000000EE  E2 F5		     loop L2
- 000000F0  59			     pop ecx
- 000000F1  E2 DF		     loop L1
+ 000000E8  3C 41		     cmp al, 'A'
+ 000000EA  74 07		     je Hero
+ 000000EC			Default:
+ 000000EC  E8 00000000 E	     call WriteChar ; Desenha padrão (parede ou nada)
+ 000000F1  EB 1D		     jmp DefLoop
+
+ 000000F3			Hero:
+ 000000F3  50			     push eax                      ; guarda 
+ 000000F4  B8 0000008F		     mov eax, white + (gray * 16)  ; Seleciona o branco  
+ 000000F9  E8 00000000 E	     call SETTEXTCOLOR
+ 000000FE  58			     pop eax
+ 000000FF  E8 00000000 E	     call WriteChar                ; Desenha o herói
+ 00000104  B8 00000080		     mov eax, black + (gray * 16)  ; Volta para a cor padrão
+ 00000109  E8 00000000 E	     call SETTEXTCOLOR
+ 0000010E  EB 00		     jmp DefLoop
+
+ 00000110			DefLoop:          ; Continua os loops padrão
+ 00000110  43			     inc ebx   
+ 00000111  E2 D2		     loop L2   
+ 00000113  59			     pop ecx
+ 00000114  E2 C1		     loop L1
 				     
 				     ; Reseta a cor do print
- 000000F3  B8 0000000F		     mov eax, white + (black * 16)
- 000000F8  E8 00000000 E	     call SETTEXTCOLOR
+ 00000116  B8 0000000F		     mov eax, white + (black * 16)
+ 0000011B  E8 00000000 E	     call SETTEXTCOLOR
 
 				     ret
- 000000FD  58		   *	    pop    eax
- 000000FE  5B		   *	    pop    ebx
- 000000FF  5E		   *	    pop    esi
- 00000100  59		   *	    pop    ecx
- 00000101  C3		   *	    ret    00000h
- 00000102			PrintMapa ENDP
+ 00000120  58		   *	    pop    eax
+ 00000121  5B		   *	    pop    ebx
+ 00000122  5E		   *	    pop    esi
+ 00000123  59		   *	    pop    ecx
+ 00000124  C3		   *	    ret    00000h
+ 00000125			PrintMapa ENDP
 
+				; ==============================================================
+				; ResetMapa PROC
+				; Objetivo: Reseta o Mapa, setando todos os bytes do vetor para '#' - parede
+				; Usa:     MAPCOLS - Quantidade de colunas no mapa
+				;		 MAPROWS - Quantidade de linhas no mapa
+				; Retorna: Sem retorno
+				; ==============================================================
+ 00000125			ResetMapa PROC
+ 00000125  B9 00000000		     mov ecx, 0
+ 0000012A  BE 00000002 R	     mov esi, OFFSET Map
+ 0000012F  B0 23		     mov al, '#'
+ 00000131			L1:
+ 00000131  88 04 0E		     mov [esi+ecx], al
+ 00000134  41			     inc ecx
+ 00000135  81 F9 00000618	     cmp ecx, LENGTHOF Map
+ 0000013B  72 F4		     jb L1
+				     
+ 0000013D  C3			     ret
+ 0000013E			ResetMapa ENDP
 
- 00000102			main PROC
- 00000102  E8 FFFFFEF9		     call LimpaTela
- 00000107  E8 FFFFFF3F		     call Bordas
- 0000010C  E8 FFFFFFA5		     call PrintMapa
+				; ==============================================================
+				; GeraMapa PROC
+				; Objetivo: Gera o Mapa - drunkard walk modificado
+				; Usa:     MAPCOLS - Quantidade de colunas no mapa
+				;		 MAPROWS - Quantidade de linhas no mapa
+				;          Map     - Mapa (vetor de bytes)
+				; Retorna: Sem retorno
+				; ==============================================================
+ 0000013E			GeraMapa PROC
+ 0000013E  E8 FFFFFFE2		     call ResetMapa
+ 00000143  B8 000000D2		     mov eax, 210
+ 00000148  E8 00000000 E	     call RandomRange
+ 0000014D  05 000003AC		     add eax, 940
+ 00000152  66| A3		     mov emptyGoal, ax    ; Gera um número aleatório entre 940 e 1150 (60 a 72% do mapa), essa é a quantidade de células a serem limpas
+	   0000061C R
 
- 00000111			main ENDP
+ 00000158  BE 00000002 R	     mov esi, OFFSET Map
+ 0000015D  B8 00000617		     mov eax, 1559
+ 00000162  E8 00000000 E	     call RandomRange
+ 00000167  66| A3		     mov pos, ax          ; Gera a posição inicial
+	   0000061F R
+ 0000016D  B3 41		     mov bl, 'A'
+ 0000016F  88 1C 06		     mov [esi + eax], bl  ; Insere personagem na posição inicial
+
+ 00000172  C3			     ret
+ 00000173			GeraMapa ENDP
+
+				; *=============================================================
+				; main PROC
+				; Objetivo: Função principal do jogo.
+				; Usa:      Sem parâmetros
+				; Retorna:  Sem retorno
+				; =============================================================
+ 00000173			main PROC
+ 00000173  E8 00000000 E	     call Randomize      ; Randomiza a seed
+ 00000178  E8 FFFFFE83		     call LimpaTela
+ 0000017D  E8 FFFFFEC9		     call Bordas
+ 00000182  E8 FFFFFF9E		     call ResetMapa      
+ 00000187  E8 FFFFFFB2		     call GeraMapa
+ 0000018C  E8 FFFFFF25		     call PrintMapa
+
+ 00000191			main ENDP
 				END main
-Microsoft (R) Macro Assembler Version 14.14.26429.4	    06/29/18 17:25:14
+Microsoft (R) Macro Assembler Version 14.14.26429.4	    06/29/18 19:33:12
 MASMorra.asm						     Symbols 2 - 1
 
 
@@ -268,8 +350,8 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 0000061A Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 00000111 Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000621 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000191 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
@@ -294,6 +376,7 @@ FileTimeToDosDateTime  . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 FileTimeToSystemTime . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 FlushConsoleInputBuffer  . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 FormatMessageA . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GeraMapa . . . . . . . . . . . .	P Near	 0000013E _TEXT	Length= 00000035 Public STDCALL
 GetCommandLineA  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 GetCommandTail . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 GetConsoleCP . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -331,9 +414,12 @@ OpenInputFile  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 ParseDecimal32 . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ParseInteger32 . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 PeekConsoleInputA  . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-PrintMapa  . . . . . . . . . . .	P Near	 000000B6 _TEXT	Length= 0000004C Public STDCALL
-  L1 . . . . . . . . . . . . . .	L Near	 000000D2 _TEXT	
+PrintMapa  . . . . . . . . . . .	P Near	 000000B6 _TEXT	Length= 0000006F Public STDCALL
+  L1 . . . . . . . . . . . . . .	L Near	 000000D7 _TEXT	
   L2 . . . . . . . . . . . . . .	L Near	 000000E5 _TEXT	
+  Default  . . . . . . . . . . .	L Near	 000000EC _TEXT	
+  Hero . . . . . . . . . . . . .	L Near	 000000F3 _TEXT	
+  DefLoop  . . . . . . . . . . .	L Near	 00000110 _TEXT	
 Random32 . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 RandomRange  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 Randomize  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -349,6 +435,8 @@ ReadInt  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 ReadKeyFlush . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadKey  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadString . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ResetMapa  . . . . . . . . . . .	P Near	 00000125 _TEXT	Length= 00000019 Public STDCALL
+  L1 . . . . . . . . . . . . . .	L Near	 00000131 _TEXT	
 SetConsoleCursorInfo . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleCursorPosition . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleMode . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -386,7 +474,7 @@ WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-main . . . . . . . . . . . . . .	P Near	 00000102 _TEXT	Length= 0000000F Public STDCALL
+main . . . . . . . . . . . . . .	P Near	 00000173 _TEXT	Length= 0000001E Public STDCALL
 printf . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
@@ -614,6 +702,9 @@ black  . . . . . . . . . . . . .	Number	 00000000h
 blue . . . . . . . . . . . . . .	Number	 00000001h   
 brown  . . . . . . . . . . . . .	Number	 00000006h   
 cyan . . . . . . . . . . . . . .	Number	 00000003h   
+direction  . . . . . . . . . . .	Byte	 0000061E _DATA	
+emptyCells . . . . . . . . . . .	Word	 0000061A _DATA	
+emptyGoal  . . . . . . . . . . .	Word	 0000061C _DATA	
 exit . . . . . . . . . . . . . .	Text   	 INVOKE ExitProcess,0
 gray . . . . . . . . . . . . . .	Number	 00000008h   
 green  . . . . . . . . . . . . .	Number	 00000002h   
@@ -624,6 +715,7 @@ lightGreen . . . . . . . . . . .	Number	 0000000Ah
 lightMagenta . . . . . . . . . .	Number	 0000000Dh   
 lightRed . . . . . . . . . . . .	Number	 0000000Ch   
 magenta  . . . . . . . . . . . .	Number	 00000005h   
+pos  . . . . . . . . . . . . . .	Word	 0000061F _DATA	
 red  . . . . . . . . . . . . . .	Number	 00000004h   
 white  . . . . . . . . . . . . .	Number	 0000000Fh   
 wsprintf . . . . . . . . . . . .	Text   	 wsprintfA

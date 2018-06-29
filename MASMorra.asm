@@ -8,12 +8,19 @@ MAPROWS = (ROWS - 5) ; Linhas do mapa
 
 ; Variáveis
 .data
-     ; Variaveis da tela
+     ; Variáveis da tela
      xMax BYTE COLS      ; número maximo de colunas
      yMax BYTE ROWS      ; númer maximo de linhas
 
-     ; Variaveis do mapa
-     Map BYTE MAPCOLS*MAPROWS Dup('#')  ; Mapa: vetor de (colunas*linhas) posições. 
+     ; Mapa
+     Map BYTE MAPCOLS*MAPROWS Dup('#')  ; vetor de (colunas*linhas) posições. 
+
+     ; Variáveis de geração de mapa
+     emptyCells WORD 0
+     emptyGoal WORD 0
+     direction BYTE 0    ; Direção do corredor [0-Norte, 1-Leste, 2-Sul, 3-Oeste]
+     pos WORD 0          ; Ponteiro para a posição atual no mapa (0 - 1559)
+
 
 
 ; Procedimentos
@@ -112,18 +119,33 @@ PrintMapa PROC USES ecx esi ebx eax
      mov dl, 1
      mov ecx, MAPROWS
      mov esi, OFFSET map
-     
+     mov ebx, 0
 L1:
      add dh, 1
-     mov ebx, 0    
      push ecx                 ; Guarda ecx
      mov ecx, MAPCOLS         ; ecx = numero de colunas do mapa
      call GOTOXY              ; Função Irvine : Configura o cursor para a linha dh e a coluna dl
 L2:
      mov al, [esi + ebx]
-     call WriteChar
-     inc ebx
-     loop L2
+     cmp al, 'A'
+     je Hero
+Default:
+     call WriteChar ; Desenha padrão (parede ou nada)
+     jmp DefLoop
+
+Hero:
+     push eax                      ; guarda 
+     mov eax, white + (gray * 16)  ; Seleciona o branco  
+     call SETTEXTCOLOR
+     pop eax
+     call WriteChar                ; Desenha o herói
+     mov eax, black + (gray * 16)  ; Volta para a cor padrão
+     call SETTEXTCOLOR
+     jmp DefLoop
+
+DefLoop:          ; Continua os loops padrão
+     inc ebx   
+     loop L2   
      pop ecx
      loop L1
      
@@ -134,10 +156,63 @@ L2:
      ret
 PrintMapa ENDP
 
+; ==============================================================
+; ResetMapa PROC
+; Objetivo: Reseta o Mapa, setando todos os bytes do vetor para '#' - parede
+; Usa:     MAPCOLS - Quantidade de colunas no mapa
+;		 MAPROWS - Quantidade de linhas no mapa
+; Retorna: Sem retorno
+; ==============================================================
+ResetMapa PROC
+     mov ecx, 0
+     mov esi, OFFSET Map
+     mov al, '#'
+L1:
+     mov [esi+ecx], al
+     inc ecx
+     cmp ecx, LENGTHOF Map
+     jb L1
+     
+     ret
+ResetMapa ENDP
 
+; ==============================================================
+; GeraMapa PROC
+; Objetivo: Gera o Mapa - drunkard walk modificado
+; Usa:     MAPCOLS - Quantidade de colunas no mapa
+;		 MAPROWS - Quantidade de linhas no mapa
+;          Map     - Mapa (vetor de bytes)
+; Retorna: Sem retorno
+; ==============================================================
+GeraMapa PROC
+     call ResetMapa
+     mov eax, 210
+     call RandomRange
+     add eax, 940
+     mov emptyGoal, ax    ; Gera um número aleatório entre 940 e 1150 (60 a 72% do mapa), essa é a quantidade de células a serem limpas
+
+     mov esi, OFFSET Map
+     mov eax, 1559
+     call RandomRange
+     mov pos, ax          ; Gera a posição inicial
+     mov bl, 'A'
+     mov [esi + eax], bl  ; Insere personagem na posição inicial
+
+     ret
+GeraMapa ENDP
+
+; *=============================================================
+; main PROC
+; Objetivo: Função principal do jogo.
+; Usa:      Sem parâmetros
+; Retorna:  Sem retorno
+; =============================================================
 main PROC
+     call Randomize      ; Randomiza a seed
      call LimpaTela
      call Bordas
+     call ResetMapa      
+     call GeraMapa
      call PrintMapa
 
 main ENDP

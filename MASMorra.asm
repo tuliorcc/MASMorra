@@ -14,12 +14,14 @@ MAPROWS = (ROWS - 5) ; Linhas do mapa
 
      ; Mapa
      Map BYTE MAPCOLS*MAPROWS Dup('#')  ; vetor de (colunas*linhas) posições. 
+     posHeroi WORD 0    ; Posição atual do heroi
 
      ; Variáveis de geração de mapa
      emptyCells WORD 0
      emptyGoal WORD 0
      direction BYTE 0    ; Direção do corredor [0-Norte, 1-Leste, 2-Sul, 3-Oeste]
      pos WORD 0          ; Ponteiro para a posição atual no mapa (0 - 1559)
+     passos BYTE 0       ; Numero de passos que sao dados na geração do mapa
 
 
 
@@ -182,21 +184,130 @@ ResetMapa ENDP
 ; Usa:     MAPCOLS - Quantidade de colunas no mapa
 ;		 MAPROWS - Quantidade de linhas no mapa
 ;          Map     - Mapa (vetor de bytes)
+;          emptyCells - células vazias no mapa
+;          emptyGoal - Meta de células vazias
+;          pos - posição atual na matriz
+;          direction - direcao que a geracao se movera
+;          passos - numero de passos que serão dados
 ; Retorna: Sem retorno
 ; ==============================================================
 GeraMapa PROC
+; ------------------------- Reseta mapa e variáveis
      call ResetMapa
+     mov emptyCells, 0
+; ------------------------- Randomiza a meta de células limpas - entre 940 e 1150 (60 a 72 % do mapa)
      mov eax, 210
      call RandomRange
      add eax, 940
-     mov emptyGoal, ax    ; Gera um número aleatório entre 940 e 1150 (60 a 72% do mapa), essa é a quantidade de células a serem limpas
+     mov emptyGoal, ax 
 
+; ------------------------- Define uma posição inicial aleatória e salva em pos
      mov esi, OFFSET Map
      mov eax, 1559
      call RandomRange
-     mov pos, ax          ; Gera a posição inicial
+     mov pos, ax   
+     mov posHeroi, ax
+     ; --------- Insere Personagem em pos
      mov bl, 'A'
-     mov [esi + eax], bl  ; Insere personagem na posição inicial
+     mov [esi + eax], bl 
+
+; ------------------------- Enquanto Células vazias < Meta
+WL1: mov ax, emptyGoal
+     cmp emptyCells, ax
+     jae Fim
+
+; ------------------------- Randomiza direção e num. de passos (de 2 a 5)
+     ;----------- Randomiza direção (0-3)
+     mov eax, 3
+     call RandomRange
+     mov direction, al
+     ; --------- Randomiza número de passos (2-5)
+     mov eax, 3
+     call RandomRange
+     add eax, 2
+     mov passos, al
+     ; --------- Verifica direção e salta para o trecho correspondente
+     mov esi, OFFSET Map
+     cmp direction, 0
+     je MoveNorth
+     cmp direction, 1
+     je MoveEast
+     cmp direction, 2
+     je MoveSouth
+     cmp direction, 3
+     je MoveWest
+
+MoveNorth:
+     ; ---------- Tira paredes para o norte
+     xor ecx, ecx
+     mov cl, passos
+MNC:
+     mov ax, pos         
+     sub ax, MAPCOLS     ; Se não pode mover para cima,
+     js WL1              ; volta para o inicio
+
+     mov bl, ' '
+     mov [esi+ eax], bl   ; limpa a posição
+     mov pos, ax         ; salva a nova posição
+     loop MNC
+
+MoveEast:
+     ; ----------Tira paredes para o leste
+     xor ecx, ecx
+     mov cl, passos
+MEC: 
+     mov ax, pos
+     inc ax       ; ax = pos+1
+     mov bl, 78
+     div bl       ; (pos+1)/78 - Resto fica em AH
+     cmp ah, 0
+     je WL1      ; se (pos+1)%78 = 0, então não é valido
+     
+     mov ax, pos
+     inc ax
+     mov bl, ' '
+     mov [esi+ eax], bl
+     loop MEC
+
+
+MoveSouth:
+     ; ----------Tira paredes para o sul
+     xor ecx, ecx
+     mov cl, passos
+MSC: 
+     mov ax, pos
+     add ax, MAPCOLS
+     cmp ax, 1559     ; Se não pode mover para baixo,
+     ja WL1           ; volta para o inicio
+
+     mov bl, ' '
+     mov[esi + eax], bl   ; limpa a posição
+     mov pos, ax         ; salva a nova posição
+     loop MSC
+
+MoveWest:
+     ; ----------Tira paredes para o oeste
+     xor ecx, ecx
+     mov cl, passos
+MWC :
+     mov ax, pos
+     mov bl, 78
+     div bl         ; pos/78 - Resto fica em AH
+     cmp ah, 0
+     je WL1         ; se pos%78 = 0, então não é valido
+
+     mov ax, pos
+     dec ax
+     mov bl, ' '
+     mov[esi + eax], bl
+     loop MWC
+
+
+Fim:
+     ; -------- - Insere Personagem no mapa
+     mov ax, posHeroi
+     mov bl, 'A'
+     mov[esi + eax], bl
 
      ret
 GeraMapa ENDP

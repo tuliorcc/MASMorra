@@ -71,38 +71,84 @@ LimpaTela ENDP
 ; Retorna: Sem retorno
 ; ==============================================================
 Bordas PROC
-     mov eax, red + (black * 16)
-     call SETTEXTCOLOR
+     mov eax, gray + (black * 16)
+     call SetTextColor
 
-     movzx ecx, xMax                   ; Trecho para impressão da primeira linha da matriz do jogo, imprime tMaxX vezes o caracter "!"
-     mov al, '/'
+     ; -------------------- Imprime a borda superior do mapa
+     movzx ecx, xMax            
+     mov al, '#'
 L1:
-     call WRITECHAR
+     call WriteChar
      loop L1
-
-     movzx ecx, yMax                   ; Trecho para impressão dos limites laterais do Jogo, imprime tMaxY vezes o caracter '!' de cada lado do inicio e fim da barra impressa anteriormente
+     
+     ; ------------------- Imprime as bordas laterais do mapa
+     movzx ecx, yMax                  
+     sub ecx, 4
      mov dh, 1
 L2:
      mov dl, 0
-     call GOTOXY
-     call WRITECHAR
+     call GotoXY
+     call WriteChar
      mov dl, xMax
      dec dl
-     call GOTOXY
-     call WRITECHAR
+     call GotoXY
+     call WriteChar
      inc dh
      loop L2
 
+     ; ------------------ Imprime a borda de baixo do mapa
      mov dl, 0
      mov dh, yMax
-     call GOTOXY
-     movzx ecx, xMax                 ; Trecho para impressão da ultima linha da matriz do jogo, imprime tMaxX vezes o caracter "!"
+     sub dh, 4
+     call GotoXY
+     movzx ecx, xMax           
 L3:
-     call WRITECHAR
+     call WriteChar
      loop L3
 
+     mov eax, red + (black * 16)
+     call SetTextColor
+
+
+     ; --------------------Imprime a borda superior do status
+     mov al, '='
+     mov dl, 0
+     mov dh, yMax
+     sub dh, 3
+     call GotoXY
+     movzx ecx, xMax
+L4:
+     call WriteChar
+     loop L4
+
+     ; ------------------Imprime a borda de baixo do status
+     mov dl, 0
+     mov dh, yMax
+     call GotoXY
+     movzx ecx, xMax
+L5:
+     call WriteChar
+     loop L5
+     
+     ; ------------------ Imprime as laterais do status
+     mov al, 'I'
+     mov ecx, 2
+     mov dh, yMax
+     sub dh, 2
+L6:
+     mov dl, 0
+     call GotoXY
+     call WriteChar
+     mov dl, xMax
+     dec dl
+     call GotoXY
+     call WriteChar
+     inc dh
+     loop L6
+
+     ; ------- Reseta a cor e retorna
      mov eax, white + (black * 16)
-     call SETTEXTCOLOR
+     call SetTextColor
      ret
 Bordas ENDP
 
@@ -195,16 +241,17 @@ GeraMapa PROC
 ; ------------------------- Reseta mapa e variáveis
      call ResetMapa
      mov emptyCells, 0
-; ------------------------- Randomiza a meta de células limpas - entre 620 e 1070 (aprox. 40 a 70 % do mapa)
-     mov eax, 450
+; ------------------------- Randomiza a meta de células limpas - entre 620 e 870 (aprox. 40 a 55 % do mapa)
+     mov eax, 451
      call RandomRange
-     add eax, 620
+     add eax, 420
      mov emptyGoal, ax 
 
-; ------------------------- Define uma posição inicial aleatória e salva em pos
+; ------------------------- Define uma posição inicial aleatória NO MEIO DO MAPA e salva em pos
      mov esi, OFFSET Map
-     mov eax, 1559
+     mov eax, 521
      call RandomRange
+     add eax, 520
      mov pos, ax   
      mov posHeroi, ax
 

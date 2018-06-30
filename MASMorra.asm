@@ -195,10 +195,10 @@ GeraMapa PROC
 ; ------------------------- Reseta mapa e variáveis
      call ResetMapa
      mov emptyCells, 0
-; ------------------------- Randomiza a meta de células limpas - entre 940 e 1150 (60 a 72 % do mapa)
-     mov eax, 210
+; ------------------------- Randomiza a meta de células limpas - entre 620 e 1070 (aprox. 40 a 70 % do mapa)
+     mov eax, 450
      call RandomRange
-     add eax, 940
+     add eax, 620
      mov emptyGoal, ax 
 
 ; ------------------------- Define uma posição inicial aleatória e salva em pos
@@ -207,9 +207,6 @@ GeraMapa PROC
      call RandomRange
      mov pos, ax   
      mov posHeroi, ax
-     ; --------- Insere Personagem em pos
-     mov bl, 'A'
-     mov [esi + eax], bl 
 
 ; ------------------------- Enquanto Células vazias < Meta
 WL1: mov ax, emptyGoal
@@ -217,14 +214,14 @@ WL1: mov ax, emptyGoal
      jae Fim
 
 ; ------------------------- Randomiza direção e num. de passos (de 2 a 5)
-     ;----------- Randomiza direção (0-3)
-     mov eax, 3
+     ;----------- Randomiza direção (0-4)
+     mov eax, 4
      call RandomRange
      mov direction, al
-     ; --------- Randomiza número de passos (2-5)
-     mov eax, 3
+     ; --------- Randomiza número de passos (1-9)
+     mov eax, 9
      call RandomRange
-     add eax, 2
+     inc eax
      mov passos, al
      ; --------- Verifica direção e salta para o trecho correspondente
      mov esi, OFFSET Map
@@ -245,11 +242,17 @@ MNC:
      mov ax, pos         
      sub ax, MAPCOLS     ; Se não pode mover para cima,
      js WL1              ; volta para o inicio
+     
+     mov pos, ax; salva a nova posição
 
      mov bl, ' '
-     mov [esi+ eax], bl   ; limpa a posição
-     mov pos, ax         ; salva a nova posição
+     cmp[esi + eax], bl
+     je NowriteN
+     inc emptyCells
+     mov[esi + eax], bl
+NowriteN:  
      loop MNC
+     jmp WL1
 
 MoveEast:
      ; ----------Tira paredes para o leste
@@ -265,9 +268,16 @@ MEC:
      
      mov ax, pos
      inc ax
+     mov pos, ax  ; salva a nova posição
+
      mov bl, ' '
-     mov [esi+ eax], bl
+     cmp[esi + eax], bl
+     je NowriteE
+     inc emptyCells
+     mov[esi + eax], bl
+NowriteE:  
      loop MEC
+     jmp WL1
 
 
 MoveSouth:
@@ -280,10 +290,16 @@ MSC:
      cmp ax, 1559     ; Se não pode mover para baixo,
      ja WL1           ; volta para o inicio
 
+     mov pos, ax     ; salva a nova posição
+
      mov bl, ' '
-     mov[esi + eax], bl   ; limpa a posição
-     mov pos, ax         ; salva a nova posição
+     cmp[esi + eax], bl
+     je NowriteS
+     inc emptyCells
+     mov[esi + eax], bl
+NowriteS:  
      loop MSC
+     jmp WL1
 
 MoveWest:
      ; ----------Tira paredes para o oeste
@@ -298,9 +314,17 @@ MWC :
 
      mov ax, pos
      dec ax
+     mov pos, ax    ; salva a nova posição
+
      mov bl, ' '
+     cmp[esi + eax], bl
+     je NowriteW
+     inc emptyCells
      mov[esi + eax], bl
+NowriteW:  
      loop MWC
+     jmp WL1
+
 
 
 Fim:

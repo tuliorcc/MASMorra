@@ -25,6 +25,8 @@ yMax BYTE ROWS      ;// númer maximo de linhas
 Map BYTE MAPCOLS*MAPROWS Dup('#')	;// vetor de (colunas*linhas) posições. 
 posHeroi WORD 0						;// Posição atual do heroi
 HeroiChar BYTE 'O'
+posEscada WORD 0
+EscadaChar BYTE 'H'
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: GERAÇÃO DE MAPAS
@@ -426,6 +428,8 @@ L2:
      mov al, [esi + ebx]
      cmp al, HeroiChar
      je Hero
+     cmp al, EscadaChar
+     je Escada
 Default:
      call WriteChar ;// Desenha padrão (parede ou nada)
      jmp DefLoop
@@ -436,6 +440,16 @@ Hero:
      call SETTEXTCOLOR
      pop eax
      call WriteChar                ;// Desenha o herói
+     mov eax, black + (gray * 16)  ;// Volta para a cor padrão
+     call SETTEXTCOLOR
+     jmp DefLoop
+
+Escada:
+     push eax                      ;// guarda 
+     mov eax, lightGreen + (gray * 16)  ;// Seleciona o branco  
+     call SETTEXTCOLOR
+     pop eax
+     call WriteChar                ;// Desenha a Escada
      mov eax, black + (gray * 16)  ;// Volta para a cor padrão
      call SETTEXTCOLOR
      jmp DefLoop
@@ -624,6 +638,12 @@ NowriteW:
 
 
 Fim:
+     ;// -------- - Insere a Escada no mapa
+     mov ax, pos
+     mov posEscada, ax
+     mov bl, EscadaChar
+     mov [esi+eax], bl
+
      ;// -------- - Insere Personagem no mapa
      mov ax, posHeroi
      mov bl, HeroiChar

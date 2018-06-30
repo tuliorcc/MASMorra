@@ -20,7 +20,7 @@ xMax BYTE COLS      ;// número maximo de colunas
 yMax BYTE ROWS      ;// númer maximo de linhas
 
 ;// -------------------------------------------------------------------------
-;//  VARIÁVEIS: CONTROLE DO MAPA
+;//  VARIÁVEIS: CONTROLE E EXIBIÇÃO DO MAPA
 ;// -------------------------------------------------------------------------
 Map BYTE MAPCOLS*MAPROWS Dup(?)	;// vetor de (colunas*linhas) posições. 
 posHeroi WORD 0						;// Posição atual do heroi
@@ -31,10 +31,11 @@ paredeChar BYTE '#'
 vazioChar  BYTE ' '
 
 ;// -------------------------------------------------------------------------
-;//  VARIÁVEIS: CONTROLE DO JOGO
+;//  VARIÁVEIS: CONTROLE E EXIBIÇÃO DE VARIÁVEIS DO JOGO
 ;// -------------------------------------------------------------------------
 Level BYTE 0   ;// Nível atual
-inStairs db 0  ;// Indica se o jogador se encontra na escada
+inStairs DB 0  ;// Indica se o jogador se encontra na escada
+strLevel DB 'LEVEL',0
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: GERAÇÃO DE MAPAS
@@ -411,6 +412,36 @@ L6:
 drawBordas ENDP
 
 ;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: drawStatus
+;// -------------------------------------------------------------------------
+;//	 OBJETIVO: Desenha o status do jogo (nível, vida, etc)
+;//  PARÂMETROS: xMax - Quantidade de colunas totais do jogo
+;//		       yMax - Quantidade de linhas totais do jogo
+;//  RETORNO: Não Possui
+;// -------------------------------------------------------------------------
+drawStatus PROC uses eax edx
+     
+     mov eax, white+(black*16)
+     call SetTextColor
+
+     ;// ---- LEVEL
+     mov dh, 23
+     mov dl, 5
+     call GotoXY
+     mov edx, OFFSET strLevel
+     call WriteString
+     mov dh, 24
+     mov dl, 7
+     call GotoXY
+     mov al, Level
+     call WriteDec
+     
+     call HideCursor
+     ret
+drawStatus ENDP
+
+
+;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: PrintMapa
 ;// -------------------------------------------------------------------------
 ;//	 OBJETIVO: Desenha o mapa do jogo
@@ -680,6 +711,7 @@ InitLevel:
 
 gameloop:
      call PrintMapa;// Desenha o mapa
+     call drawStatus;// Escreve os status
      call PlayerMove
      cmp inStairs, 0
      jne NextLevel

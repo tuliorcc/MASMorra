@@ -24,6 +24,7 @@ yMax BYTE ROWS      ;// númer maximo de linhas
 ;// -------------------------------------------------------------------------
 Map BYTE MAPCOLS*MAPROWS Dup('#')	;// vetor de (colunas*linhas) posições. 
 posHeroi WORD 0						;// Posição atual do heroi
+HeroiChar BYTE 'O'
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: GERAÇÃO DE MAPAS
@@ -239,7 +240,8 @@ DoMenuSel PROC
 	invoke ExitProcess, 0
 ;// SELEÇÃO DO MENU: Novo Jogo
 opNovoJogo:
-		ret ;// Retorna ao procedimento main
+          call MainGame
+		jmp MenuRetWait 
 ;// SELEÇÃO DO MENU: Conquistas
 opConquistas:
 		call LimpaTela
@@ -316,7 +318,7 @@ LimpaTela ENDP
 ;//				 yMax - Quantidade de linhas totais do jogo
 ;//  RETORNO: Não Possui
 ;// -------------------------------------------------------------------------
-drawBordas PROC
+drawBordas PROC uses eax ecx edx 
      mov eax, gray + (black * 16)
      call SetTextColor
 
@@ -422,7 +424,7 @@ L1:
      call GOTOXY              ;// Função Irvine : Configura o cursor para a linha dh e a coluna dl
 L2:
      mov al, [esi + ebx]
-     cmp al, 'A'
+     cmp al, HeroiChar
      je Hero
 Default:
      call WriteChar ;// Desenha padrão (parede ou nada)
@@ -458,7 +460,7 @@ PrintMapa ENDP
 ;//		 MAPROWS - Quantidade de linhas no mapa
 ;// Retorna: Sem retorno
 ;// ==============================================================
-ResetMapa PROC
+ResetMapa PROC uses eax ecx esi
      mov ecx, 0
      mov esi, OFFSET Map
      mov al, '#'
@@ -484,7 +486,7 @@ ResetMapa ENDP
 ;//          passos - numero de passos que serão dados
 ;// Retorna: Sem retorno
 ;// ==============================================================
-GeraMapa PROC
+GeraMapa PROC USES eax ebx ecx edx esi
 ;// ------------------------- Reseta mapa e variáveis
      call ResetMapa
      mov emptyCells, 0
@@ -611,10 +613,10 @@ MWC :
      mov pos, ax    ;// salva a nova posição
 
      mov bl, ' '
-     cmp[esi + eax], bl
+     cmp [esi + eax], bl
      je NowriteW
      inc emptyCells
-     mov[esi + eax], bl
+     mov [esi + eax], bl
 NowriteW:  
      loop MWC
      jmp WL1
@@ -624,11 +626,174 @@ NowriteW:
 Fim:
      ;// -------- - Insere Personagem no mapa
      mov ax, posHeroi
-     mov bl, 'A'
-     mov[esi + eax], bl
+     mov bl, HeroiChar
+     mov [esi + eax], bl
 
      ret
 GeraMapa ENDP
+
+;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: mainGame
+;// -------------------------------------------------------------------------
+;//	OBJETIVO: Loop do jogo
+;//  PARÂMETROS: Não Possui
+;//  RETORNO: Não Possui
+;// -------------------------------------------------------------------------
+MainGame PROC
+
+     call LimpaTela;// Limpa a tela
+     call drawBordas;// Desenha as bordas do jogo
+     call ResetMapa;// Reseta o mapa
+     call GeraMapa;// Gera um novo mapa
+
+gameloop:
+     call PrintMapa;// Desenha o mapa
+     call PlayerMove
+
+     jmp gameloop
+     
+     ret
+MainGame ENDP
+
+;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: PlayerMove
+;// -------------------------------------------------------------------------
+;//	 OBJETIVO: Lê a entrada do jogador e move o personagem
+;//  PARÂMETROS: Não Possui
+;//  RETORNO: Não Possui
+;// -------------------------------------------------------------------------
+PlayerMove PROC uses eax esi edx ebx 
+         
+     mov esi, OFFSET Map    
+
+KeyWait:
+     mov eax, 50
+     call Delay; // Sleep para timeslice
+     call ReadKey
+     jz KeyWait
+
+     cmp  dx, 0026h
+     je KeyUp
+     cmp dx, 0025h
+     je KeyLeft
+     cmp dx, 0027h
+     je KeyRight
+     cmp dx, 0028h
+     je KeyDown
+     jmp KeyWait
+
+KeyUp:
+     mov ax, posHeroi
+     cmp ax, 77
+     jbe KeyWait      ;// Aguarda outra tecla caso inválido
+
+     ;// Checa se existe uma parede:
+     sub eax, 78
+     mov bl, '#'
+     cmp [esi + eax], bl
+     je KeyWait
+     ;// Move caso válido
+     mov bl, ' '
+     cmp[esi + eax], bl
+     je MovUp
+     ;// -------------------------- INSERIR COLISÕES
+
+KeyDown:
+     mov ax, posHeroi
+     mov bx, 1482
+     cmp ax, bx
+     jae KeyWait;   // Aguarda outra tecla caso inválido
+
+     ;// Checa se existe uma parede:
+     add eax, 78
+     mov bl, '#'
+     cmp[esi + eax], bl
+     je KeyWait
+     ;// Move caso válido
+     mov bl, ' '
+     cmp[esi + eax], bl
+     je MovDown
+     ;// -------------------------- INSERIR COLISÕES
+
+KeyLeft:
+     mov ax, PosHeroi
+     div bl         ;// pos/78 - Resto fica em AH
+     cmp ah, 0
+     je KeyWait         ;// se pos%78 = 0, então não é valido
+
+     mov ax, posHeroi
+     ;// Checa se existe uma parede:
+     dec ax
+     mov bl, '#'
+     cmp [esi+eax], bl
+     je KeyWait
+     ;// Move caso válido
+     mov bl, ' '
+     cmp [esi + eax], bl
+     je MovLeft
+     ;// -------------------------- INSERIR COLISÕES
+
+KeyRight:
+     mov ax, PosHeroi
+     inc ax         ;// ax = pos+1
+     mov bl, 78
+     div bl         ;// (pos+1)/78 - Resto fica em AH
+     cmp ah, 0
+     je KeyWait     ;// se (pos+1)%78 = 0, então não é valido
+
+     mov ax, posHeroi
+     ;// Checa se existe uma parede:
+     inc ax
+     mov bl, '#'
+     cmp[esi + eax], bl
+     je KeyWait
+     ;// Move caso válido
+     mov bl, ' '
+     cmp[esi + eax], bl
+     je MovRight
+     ;// -------------------------- INSERIR COLISÕES
+
+MovUp:
+     sub posHeroi, 78
+     mov ax, posHeroi
+     mov bl, ' '
+     mov [esi + eax + 78], bl   ;// Limpa posição atual
+     mov bl, HeroiChar
+     mov [esi + eax], bl ; // Adiciona o heroi na nova posição
+     jmp EndInput
+
+MovDown :
+     add posHeroi, 78
+     mov ax, posHeroi
+     mov bl, ' '
+     mov[esi + eax - 78], bl   ;// Limpa posição atual
+     mov bl, HeroiChar
+     mov[esi + eax], bl ; // Adiciona o heroi na nova posição
+     jmp EndInput
+
+MovLeft :
+     dec posHeroi
+     mov ax, posHeroi
+     mov bl, ' '
+     mov[esi + eax + 1], bl;// Limpa posição atual
+     mov bl, HeroiChar
+     mov[esi + eax], bl; // Adiciona o heroi na nova posição
+     jmp EndInput
+
+MovRight :
+     inc posHeroi
+     mov ax, posHeroi
+     mov bl, ' '
+     mov[esi + eax - 1], bl;// Limpa posição atual
+     mov bl, HeroiChar
+     mov[esi + eax], bl; // Adiciona o heroi na nova posição
+     jmp EndInput
+
+
+EndInput:     
+
+     ret
+PlayerMove ENDP
 
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: main
@@ -638,17 +803,11 @@ GeraMapa ENDP
 ;//  RETORNO: Não Possui
 ;// -------------------------------------------------------------------------
 main PROC
-
+     call Randomize;// Randomiza a seed
 	invoke SetConsoleTitle, OFFSET ctitle	;// Muda o título do terminal
 	call HideCursor							;// Esconde o cursor piscante
 	mov cl, 0								;// Inicia o seletor do menu na primeira opção
 	call ShowMenu							;// Mostra o menu principal
-	call Randomize							;// Randomiza a seed
-	call LimpaTela							;// Limpa a tela
-	call drawBordas							;// Desenha as bordas do jogo
-	call ResetMapa							;// Reseta o mapa
-	call GeraMapa							;// Gera um novo mapa
-	call PrintMapa							;// Desenha o mapa
 
 main ENDP
 END main

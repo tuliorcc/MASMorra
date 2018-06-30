@@ -157,7 +157,7 @@ ShowMenu PROC
 
 	mov esi, 0	;// Inicia o índice do menu na primeira opção
 
-	call clrscr
+	call LimpaTela
 
 	mov edx, OFFSET telaMenu ;// Imprime a tela inicial do menu
 	call WriteString
@@ -234,26 +234,26 @@ DoMenuSel PROC
 	cmp cl, 3
 	je opConfig
 ;// SELEÇÃO DO MENU: Sair
-	call clrscr
+	call LimpaTela
 	invoke ExitProcess, 0
 ;// SELEÇÃO DO MENU: Novo Jogo
 opNovoJogo:
 		ret ;// Retorna ao procedimento main
 ;// SELEÇÃO DO MENU: Conquistas
 opConquistas:
-		call clrscr
+		call LimpaTela
 		mov edx, OFFSET telaConqs
 		call WriteString
 		jmp MenuRetWait
 ;// SELEÇÃO DO MENU: Ajuda
 opAjuda:
-		call clrscr
+		call LimpaTela
 		mov edx, OFFSET telaAjuda
 		call WriteString
 		jmp MenuRetWait
 ;// SELEÇÃO DO MENU: Configurações
 opConfig:
-		call clrscr
+		call LimpaTela
 		mov edx, OFFSET telaConfig
 		call WriteString
 ;// Para telas do menu que aguardam uma tecla para retornar
@@ -274,34 +274,36 @@ DoMenuSel ENDP
 ;//  PARÂMETROS: Não Possui
 ;//  RETORNO: Não Possui
 ;// -------------------------------------------------------------------------
-LimpaTela PROC
-     mov eax, black + (black * 16)      ;// Para a função SETTEXTCOLOR deve ser passado al, onde os 4 bits HSB é a cor de fundo e os 4 LSB são a cor da letra, a multiplicação por 16 é equivalente a dar um shift de 4 bits para a esquerda
-     call SETTEXTCOLOR                  ;// Função Irvine : Configura a cor do texto recebendo como parâmetro o registrador eax
-     mov dl, 0                          ;// Move o cursor para a posição 0, 0
-     mov dh, 0
-     call GOTOXY                        ;// Função Irvine : Configura o cursor para a linha dh e a coluna dl
-     movzx ecx, xMax                    ;// Inicializa o contador do loop com a quantidade de colunas
+LimpaTela PROC USES eax ecx edx
+	mov eax, black + (black * 16) ;// Para a função SETTEXTCOLOR deve ser passado al, onde os 4 bits HSB é a cor de fundo e os 4 LSB são a cor da letra, a multiplicação por 16 é equivalente a dar um shift de 4 bits para a esquerda
+	call SETTEXTCOLOR ;// Função Irvine : Configura a cor do texto recebendo como parâmetro o registrador eax
+	mov dl, 0 ;// Move o cursor para a posição 0, 0
+	mov dh, 0
+	call GOTOXY ;// Função Irvine : Configura o cursor para a linha dh e a coluna dl
+	movzx ecx, yMax ;// Inicializa o contador do loop com a quantidade de linhas
+	inc ecx
+	mov al, ' '
 
-LLP1:
-     mov dl, 0
-     mov dh, cl
-     call GOTOXY
-     push ecx
-     movzx ecx, yMax                    ;// Inicializa o contador do loop com a quantidade de linhas
-LLP2:
-     mov al, ' '
-     call WRITECHAR                     ;// Função Irvine : Escreve um caracter no terminal, tMaxX * tMaxY vezes(declarado de forma a ser dois loops aninhados)
-     loop LLP2
+LLP1 :
+	mov dl, 0
+	call GOTOXY
+	push ecx
+	movzx ecx, xMax ;// Inicializa o contador do loop com a quantidade de colunhas
+LLP2 :
+	call WRITECHAR ;// Função Irvine : Escreve um caracter no terminal, tMaxX * tMaxY vezes(declarado de forma a ser dois loops aninhados)
+	inc dl
+	loop LLP2
 
-     pop ecx
-     loop LLP1
+	inc dh
+	pop ecx
+	loop LLP1
 
-     mov eax, white + (black * 16)
-     call SETTEXTCOLOR
-     mov dl, 0
-     mov dh, 0
-     call GOTOXY
-     ret
+	mov eax, white + (black * 16)
+	call SETTEXTCOLOR
+	mov dl, 0
+	mov dh, 0
+	call GOTOXY
+	ret
 LimpaTela ENDP
 
 ;// -------------------------------------------------------------------------

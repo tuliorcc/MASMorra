@@ -39,19 +39,21 @@ LimpaTela PROC
      mov dl, 0                          ; Move o cursor para a posição 0, 0
      mov dh, 0
      call GOTOXY                        ; Função Irvine : Configura o cursor para a linha dh e a coluna dl
-     movzx ecx, xMax                    ; Inicializa o contador do loop com a quantidade de colunas
+     movzx ecx, yMax                    ; Inicializa o contador do loop com a quantidade de linhas
+     inc ecx
+     mov al, ' '
 
 LLP1 :
      mov dl, 0
-     mov dh, cl
      call GOTOXY
      push ecx
-     movzx ecx, yMax                    ; Inicializa o contador do loop com a quantidade de linhas
+     movzx ecx, xMax                    ; Inicializa o contador do loop com a quantidade de colunhas
 LLP2 :
-     mov al, ' '
      call WRITECHAR                     ; Função Irvine : Escreve um caracter no terminal, tMaxX * tMaxY vezes(declarado de forma a ser dois loops aninhados)
+     inc dl
      loop LLP2
 
+     inc dh
      pop ecx
      loop LLP1
 
@@ -396,6 +398,7 @@ main PROC
      call ResetMapa      
      call GeraMapa
      call PrintMapa
+     call LimpaTela
 
 main ENDP
 END main

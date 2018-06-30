@@ -1,2 +1,6 @@
 
 .vs/*
+*.db
+Debug/*
+Project.lst
+Project.vcxproj

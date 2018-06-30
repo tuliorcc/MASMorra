@@ -22,11 +22,19 @@ yMax BYTE ROWS      ;// númer maximo de linhas
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: CONTROLE DO MAPA
 ;// -------------------------------------------------------------------------
-Map BYTE MAPCOLS*MAPROWS Dup('#')	;// vetor de (colunas*linhas) posições. 
+Map BYTE MAPCOLS*MAPROWS Dup(?)	;// vetor de (colunas*linhas) posições. 
 posHeroi WORD 0						;// Posição atual do heroi
 HeroiChar BYTE 'O'
 posEscada WORD 0
 EscadaChar BYTE 'H'
+paredeChar BYTE '#'
+vazioChar  BYTE ' '
+
+;// -------------------------------------------------------------------------
+;//  VARIÁVEIS: CONTROLE DO JOGO
+;// -------------------------------------------------------------------------
+Level BYTE 0   ;// Nível atual
+inStairs db 0  ;// Indica se o jogador se encontra na escada
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: GERAÇÃO DE MAPAS
@@ -287,7 +295,7 @@ LimpaTela PROC USES eax ecx edx
 	call GOTOXY ;// Função Irvine : Configura o cursor para a linha dh e a coluna dl
 	movzx ecx, yMax ;// Inicializa o contador do loop com a quantidade de linhas
 	inc ecx
-	mov al, ' '
+	mov al, vazioChar
 
 LLP1 :
 	mov dl, 0
@@ -326,7 +334,7 @@ drawBordas PROC uses eax ecx edx
 
      ;// -------------------- Imprime a borda superior do mapa
      movzx ecx, xMax            
-     mov al, '#'
+     mov al, paredeChar
 L1:
      call WriteChar
      loop L1
@@ -477,7 +485,7 @@ PrintMapa ENDP
 ResetMapa PROC uses eax ecx esi
      mov ecx, 0
      mov esi, OFFSET Map
-     mov al, '#'
+     mov al, paredeChar
 L1:
      mov [esi+ecx], al
      inc ecx
@@ -555,7 +563,7 @@ MNC:
      
      mov pos, ax;// salva a nova posição
 
-     mov bl, ' '
+     mov bl, vazioChar
      cmp[esi + eax], bl
      je NowriteN
      inc emptyCells
@@ -580,7 +588,7 @@ MEC:
      inc ax
      mov pos, ax  ;// salva a nova posição
 
-     mov bl, ' '
+     mov bl, vazioChar
      cmp[esi + eax], bl
      je NowriteE
      inc emptyCells
@@ -602,7 +610,7 @@ MSC:
 
      mov pos, ax     ;// salva a nova posição
 
-     mov bl, ' '
+     mov bl, vazioChar
      cmp[esi + eax], bl
      je NowriteS
      inc emptyCells
@@ -626,7 +634,7 @@ MWC :
      dec ax
      mov pos, ax    ;// salva a nova posição
 
-     mov bl, ' '
+     mov bl, vazioChar
      cmp [esi + eax], bl
      je NowriteW
      inc emptyCells
@@ -660,7 +668,11 @@ GeraMapa ENDP
 ;//  RETORNO: Não Possui
 ;// -------------------------------------------------------------------------
 MainGame PROC
+     
+InitAll:
+     mov Level, 1
 
+InitLevel:
      call LimpaTela;// Limpa a tela
      call drawBordas;// Desenha as bordas do jogo
      call ResetMapa;// Reseta o mapa
@@ -669,8 +681,14 @@ MainGame PROC
 gameloop:
      call PrintMapa;// Desenha o mapa
      call PlayerMove
-
+     cmp inStairs, 0
+     jne NextLevel
      jmp gameloop
+
+NextLevel:
+     mov inStairs, 0
+     inc Level
+     jmp InitLevel
      
      ret
 MainGame ENDP
@@ -709,13 +727,17 @@ KeyUp:
 
      ;// Checa se existe uma parede:
      sub eax, 78
-     mov bl, '#'
+     mov bl, paredeChar
      cmp [esi + eax], bl
      je KeyWait
      ;// Move caso válido
-     mov bl, ' '
+     mov bl, vazioChar
      cmp[esi + eax], bl
      je MovUp
+     ;// Colisão com escada
+     mov bl, EscadaChar
+     cmp[esi + eax], bl
+     je colisaoEscada
      ;// -------------------------- INSERIR COLISÕES
 
 KeyDown:
@@ -726,31 +748,40 @@ KeyDown:
 
      ;// Checa se existe uma parede:
      add eax, 78
-     mov bl, '#'
+     mov bl, paredeChar
      cmp[esi + eax], bl
      je KeyWait
      ;// Move caso válido
-     mov bl, ' '
+     mov bl, vazioChar
      cmp[esi + eax], bl
      je MovDown
+     ;// Colisão com escada
+     mov bl, EscadaChar
+     cmp[esi + eax], bl
+     je colisaoEscada
      ;// -------------------------- INSERIR COLISÕES
 
 KeyLeft:
      mov ax, PosHeroi
-     div bl         ;// pos/78 - Resto fica em AH
+     mov bl, 78
+     div bl             ;// pos/78 - Resto fica em AH
      cmp ah, 0
      je KeyWait         ;// se pos%78 = 0, então não é valido
 
      mov ax, posHeroi
      ;// Checa se existe uma parede:
      dec ax
-     mov bl, '#'
+     mov bl, paredeChar
      cmp [esi+eax], bl
      je KeyWait
      ;// Move caso válido
-     mov bl, ' '
+     mov bl, vazioChar
      cmp [esi + eax], bl
      je MovLeft
+     ;// Colisão com escada
+     mov bl, EscadaChar
+     cmp[esi + eax], bl
+     je colisaoEscada
      ;// -------------------------- INSERIR COLISÕES
 
 KeyRight:
@@ -764,19 +795,23 @@ KeyRight:
      mov ax, posHeroi
      ;// Checa se existe uma parede:
      inc ax
-     mov bl, '#'
+     mov bl, paredeChar
      cmp[esi + eax], bl
      je KeyWait
      ;// Move caso válido
-     mov bl, ' '
+     mov bl, vazioChar
      cmp[esi + eax], bl
      je MovRight
+     ;// Colisão com escada
+     mov bl, EscadaChar
+     cmp[esi + eax], bl
+     je colisaoEscada
      ;// -------------------------- INSERIR COLISÕES
 
 MovUp:
      sub posHeroi, 78
      mov ax, posHeroi
-     mov bl, ' '
+     mov bl, vazioChar
      mov [esi + eax + 78], bl   ;// Limpa posição atual
      mov bl, HeroiChar
      mov [esi + eax], bl ; // Adiciona o heroi na nova posição
@@ -785,7 +820,7 @@ MovUp:
 MovDown :
      add posHeroi, 78
      mov ax, posHeroi
-     mov bl, ' '
+     mov bl, vazioChar
      mov[esi + eax - 78], bl   ;// Limpa posição atual
      mov bl, HeroiChar
      mov[esi + eax], bl ; // Adiciona o heroi na nova posição
@@ -794,7 +829,7 @@ MovDown :
 MovLeft :
      dec posHeroi
      mov ax, posHeroi
-     mov bl, ' '
+     mov bl, vazioChar
      mov[esi + eax + 1], bl;// Limpa posição atual
      mov bl, HeroiChar
      mov[esi + eax], bl; // Adiciona o heroi na nova posição
@@ -803,15 +838,18 @@ MovLeft :
 MovRight :
      inc posHeroi
      mov ax, posHeroi
-     mov bl, ' '
+     mov bl, vazioChar
      mov[esi + eax - 1], bl;// Limpa posição atual
      mov bl, HeroiChar
      mov[esi + eax], bl; // Adiciona o heroi na nova posição
      jmp EndInput
 
+colisaoEscada:
+     mov inStairs, 1
+     jmp EndInput
+
 
 EndInput:     
-
      ret
 PlayerMove ENDP
 

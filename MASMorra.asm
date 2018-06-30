@@ -1,48 +1,48 @@
 INCLUDE Irvine32.inc
 
 ;// -------------------------------------------------------------------------
-;//  DEFINI«√O DE CONSTANTES
+;//  DEFINI√á√ÉO DE CONSTANTES
 ;// -------------------------------------------------------------------------
 COLS = 80            ;// Colunas do jogo
 ROWS = 25            ;// Linhas do jogo
 MAPCOLS = (COLS - 2) ;// Colunas do mapa
 MAPROWS = (ROWS - 5) ;// Linhas do mapa
-MENUQNT = 5			 ;// Quantas opÁıes tem o menu
+MENUQNT = 5			 ;// Quantas op√ß√µes tem o menu
 
 ;// -------------------------------------------------------------------------
-;//  DEFINI«√O DE VARI¡VEIS
+;//  DEFINI√á√ÉO DE VARI√ÅVEIS
 ;// -------------------------------------------------------------------------
 .data
 ;// -------------------------------------------------------------------------
-;//  VARI¡VEIS: TELA
+;//  VARI√ÅVEIS: TELA
 ;// -------------------------------------------------------------------------
-xMax BYTE COLS      ;// n˙mero maximo de colunas
-yMax BYTE ROWS      ;// n˙mer maximo de linhas
+xMax BYTE COLS      ;// n√∫mero maximo de colunas
+yMax BYTE ROWS      ;// n√∫mer maximo de linhas
 
 ;// -------------------------------------------------------------------------
-;//  VARI¡VEIS: CONTROLE DO MAPA
+;//  VARI√ÅVEIS: CONTROLE DO MAPA
 ;// -------------------------------------------------------------------------
-Map BYTE MAPCOLS*MAPROWS Dup('#')	;// vetor de (colunas*linhas) posiÁıes. 
-posHeroi WORD 0						;// PosiÁ„o atual do heroi
+Map BYTE MAPCOLS*MAPROWS Dup('#')	;// vetor de (colunas*linhas) posi√ß√µes. 
+posHeroi WORD 0						;// Posi√ß√£o atual do heroi
 
 ;// -------------------------------------------------------------------------
-;//  VARI¡VEIS: GERA«√O DE MAPAS
+;//  VARI√ÅVEIS: GERA√á√ÉO DE MAPAS
 ;// -------------------------------------------------------------------------
 emptyCells WORD 0
 emptyGoal WORD 0
-direction BYTE 0    ;// DireÁ„o do corredor [0-Norte, 1-Leste, 2-Sul, 3-Oeste]
-pos WORD 0          ;// Ponteiro para a posiÁ„o atual no mapa (0 - 1559)
-passos BYTE 0       ;// Numero de passos que sao dados na geraÁ„o do mapa
+direction BYTE 0    ;// Dire√ß√£o do corredor [0-Norte, 1-Leste, 2-Sul, 3-Oeste]
+pos WORD 0          ;// Ponteiro para a posi√ß√£o atual no mapa (0 - 1559)
+passos BYTE 0       ;// Numero de passos que sao dados na gera√ß√£o do mapa
 
 ;// -------------------------------------------------------------------------
-;//  VARI¡VEIS: CONTROLE DO TERMINAL
+;//  VARI√ÅVEIS: CONTROLE DO TERMINAL
 ;// -------------------------------------------------------------------------
 cci CONSOLE_CURSOR_INFO <>
 StdOut HANDLE ?
-ctitle DB 'MASMorra', 0 ;// TÌtulo da janela do terminal
+ctitle DB 'MASMorra', 0 ;// T√≠tulo da janela do terminal
 
 ;// -------------------------------------------------------------------------
-;//  VARI¡VEIS: TELAS DO MENU
+;//  VARI√ÅVEIS: TELAS DO MENU
 ;// -------------------------------------------------------------------------
 
 ;// -------------------------------------------------------------------------
@@ -104,7 +104,7 @@ telaAjuda	DB 32, 201, 77 DUP(205), 187, 13, 10
 			DB 32, 200, 77 DUP(205), 188, 13, 10, 0
 
 ;// -------------------------------------------------------------------------
-;//  TELAS DO MENU: CONFIGURA«’ES
+;//  TELAS DO MENU: CONFIGURA√á√ïES
 ;// -------------------------------------------------------------------------
 telaConfig	DB 32, 201, 77 DUP(205), 187, 13, 10
 			DB 32, 186, '                                 CONFIGURACOES                               ', 186, 13, 10
@@ -125,15 +125,16 @@ telaConfig	DB 32, 201, 77 DUP(205), 187, 13, 10
 
 
 ;// -------------------------------------------------------------------------
-;//  DEFINI«√O DE PROCEDIMENTOS
+;//  DEFINI√á√ÉO DE PROCEDIMENTOS
 ;// -------------------------------------------------------------------------
 .code
+
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: HideCursor
 ;// -------------------------------------------------------------------------
 ;//	 OBJETIVO: Esconder o cursor piscante do terminal
-;//  PAR¬METROS: N„o Possui
-;//  RETORNO: N„o Possui
+;//  PAR√ÇMETROS: N√£o Possui
+;//  RETORNO: N√£o Possui
 ;// -------------------------------------------------------------------------
 HideCursor PROC
 	invoke GetStdHandle, STD_OUTPUT_HANDLE
@@ -148,27 +149,27 @@ HideCursor ENDP
 ;//  PROCEDIMENTO: ShowMenu
 ;// -------------------------------------------------------------------------
 ;//	 OBJETIVO: Imprimir o menu principal e chamar o controle da seta seletora
-;//  PAR¬METROS: CL - OpÁ„o atual do menu
-;//  RETORNO: N„o Possui
+;//  PAR√ÇMETROS: CL - Op√ß√£o atual do menu
+;//  RETORNO: N√£o Possui
 ;// -------------------------------------------------------------------------
 ShowMenu PROC
 	mov eax, yellow + (blue * 16)
 	call SetTextColor
 
-	mov esi, 0	;// Inicia o Ìndice do menu na primeira opÁ„o
+	mov esi, 0	;// Inicia o √≠ndice do menu na primeira op√ß√£o
 
 	call LimpaTela
 
 	mov edx, OFFSET telaMenu ;// Imprime a tela inicial do menu
 	call WriteString
 
-	mov ch, cl			;// Copia a seleÁ„o atual para chamar ChangeMenuSel
+	mov ch, cl			;// Copia a sele√ß√£o atual para chamar ChangeMenuSel
 	call ChangeMenuSel	;// Imprime a seta seletora do menu
 
 MENUL:
 	mov  eax, 50
 	call Delay
-	call ReadKey	;// Verifica se h· uma tecla pressionada
+	call ReadKey	;// Verifica se h√° uma tecla pressionada
 	jz MENUL
 	cmp ah, 48h	;// Seta para cima
 	je CIMA
@@ -179,14 +180,14 @@ MENUL:
 	call DoMenuSel
 	ret
 BAIXO :
-	cmp cl, (MENUQNT - 1)	;// Limitador m·ximo
+	cmp cl, (MENUQNT - 1)	;// Limitador m√°ximo
 	je MENUL
 	mov ch, cl
 	inc ch
 	call ChangeMenuSel
 	jmp MENUL
 CIMA :
-	cmp cl, 0	;// Limitador mÌnimo
+	cmp cl, 0	;// Limitador m√≠nimo
 	je MENUL
 	mov ch, cl
 	dec ch
@@ -198,31 +199,31 @@ ShowMenu ENDP
 ;//  PROCEDIMENTO: ChangeMenuSel
 ;// -------------------------------------------------------------------------
 ;//	 OBJETIVO: Imprimir a seta seletora do menu
-;//  PAR¬METROS:  CH - Nova OpÁ„o Selecionada
-;//  RETORNO: CL - OpÁ„o Selecionada
+;//  PAR√ÇMETROS:  CH - Nova Op√ß√£o Selecionada
+;//  RETORNO: CL - Op√ß√£o Selecionada
 ;// -------------------------------------------------------------------------
 ChangeMenuSel PROC
 	mov dl, 29			;// pos X da seta
 	mov dh, 9			;// base do Y do menu(topo)
 	add dh, cl			;// pos Y da seta(atual)
 	call Gotoxy
-	mov al, 32			;// ASCII: EspaÁo
-	call WriteChar		;// Limpa a seleÁ„o anterior
+	mov al, 32			;// ASCII: Espa√ßo
+	call WriteChar		;// Limpa a sele√ß√£o anterior
 	mov dh, 9			;// base do Y do menu(topo)
 	add dh, ch			;// pos Y da seta(nova)
 	call Gotoxy
 	mov al, 175			;// ASCII: Seta
 	call WriteChar		;// Escreve o indicador do menu
-	mov cl, ch			;// Troca a opÁ„o atual
+	mov cl, ch			;// Troca a op√ß√£o atual
 	ret
 ChangeMenuSel ENDP
 
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: DoMenuSel
 ;// -------------------------------------------------------------------------
-;//	 OBJETIVO: Verificar a opÁ„o selecionada no menu e agir de acordo
-;//  PAR¬METROS:  CL - OpÁ„o Selecionada
-;//  RETORNO: N„o Possui
+;//	 OBJETIVO: Verificar a op√ß√£o selecionada no menu e agir de acordo
+;//  PAR√ÇMETROS:  CL - Op√ß√£o Selecionada
+;//  RETORNO: N√£o Possui
 ;// -------------------------------------------------------------------------
 DoMenuSel PROC
 	cmp cl, 0
@@ -233,25 +234,25 @@ DoMenuSel PROC
 	je opAjuda
 	cmp cl, 3
 	je opConfig
-;// SELE«√O DO MENU: Sair
+;// SELE√á√ÉO DO MENU: Sair
 	call LimpaTela
 	invoke ExitProcess, 0
-;// SELE«√O DO MENU: Novo Jogo
+;// SELE√á√ÉO DO MENU: Novo Jogo
 opNovoJogo:
 		ret ;// Retorna ao procedimento main
-;// SELE«√O DO MENU: Conquistas
+;// SELE√á√ÉO DO MENU: Conquistas
 opConquistas:
 		call LimpaTela
 		mov edx, OFFSET telaConqs
 		call WriteString
 		jmp MenuRetWait
-;// SELE«√O DO MENU: Ajuda
+;// SELE√á√ÉO DO MENU: Ajuda
 opAjuda:
 		call LimpaTela
 		mov edx, OFFSET telaAjuda
 		call WriteString
 		jmp MenuRetWait
-;// SELE«√O DO MENU: ConfiguraÁıes
+;// SELE√á√ÉO DO MENU: Configura√ß√µes
 opConfig:
 		call LimpaTela
 		mov edx, OFFSET telaConfig
@@ -260,7 +261,7 @@ opConfig:
 MenuRetWait:
 		mov  eax, 50
 		call Delay
-		call ReadKey	;// Verifica se h· uma tecla pressionada
+		call ReadKey	;// Verifica se h√° uma tecla pressionada
 		jz MenuRetWait
 		call ShowMenu   ;// Retorna ao menu principal
 		ret
@@ -269,17 +270,17 @@ DoMenuSel ENDP
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: LimpaTela
 ;// -------------------------------------------------------------------------
-;//	 OBJETIVO: Limpar a tela, escrevendo o caracter " " (espaÁo) em toda a 
+;//	 OBJETIVO: Limpar a tela, escrevendo o caracter " " (espa√ßo) em toda a 
 ;//			   matriz do jogo
-;//  PAR¬METROS: N„o Possui
-;//  RETORNO: N„o Possui
+;//  PAR√ÇMETROS: N√£o Possui
+;//  RETORNO: N√£o Possui
 ;// -------------------------------------------------------------------------
 LimpaTela PROC USES eax ecx edx
-	mov eax, black + (black * 16) ;// Para a funÁ„o SETTEXTCOLOR deve ser passado al, onde os 4 bits HSB È a cor de fundo e os 4 LSB s„o a cor da letra, a multiplicaÁ„o por 16 È equivalente a dar um shift de 4 bits para a esquerda
-	call SETTEXTCOLOR ;// FunÁ„o Irvine : Configura a cor do texto recebendo como par‚metro o registrador eax
-	mov dl, 0 ;// Move o cursor para a posiÁ„o 0, 0
+	mov eax, black + (black * 16) ;// Para a fun√ß√£o SETTEXTCOLOR deve ser passado al, onde os 4 bits HSB √© a cor de fundo e os 4 LSB s√£o a cor da letra, a multiplica√ß√£o por 16 √© equivalente a dar um shift de 4 bits para a esquerda
+	call SETTEXTCOLOR ;// Fun√ß√£o Irvine : Configura a cor do texto recebendo como par√¢metro o registrador eax
+	mov dl, 0 ;// Move o cursor para a posi√ß√£o 0, 0
 	mov dh, 0
-	call GOTOXY ;// FunÁ„o Irvine : Configura o cursor para a linha dh e a coluna dl
+	call GOTOXY ;// Fun√ß√£o Irvine : Configura o cursor para a linha dh e a coluna dl
 	movzx ecx, yMax ;// Inicializa o contador do loop com a quantidade de linhas
 	inc ecx
 	mov al, ' '
@@ -290,7 +291,7 @@ LLP1 :
 	push ecx
 	movzx ecx, xMax ;// Inicializa o contador do loop com a quantidade de colunhas
 LLP2 :
-	call WRITECHAR ;// FunÁ„o Irvine : Escreve um caracter no terminal, tMaxX * tMaxY vezes(declarado de forma a ser dois loops aninhados)
+	call WRITECHAR ;// Fun√ß√£o Irvine : Escreve um caracter no terminal, tMaxX * tMaxY vezes(declarado de forma a ser dois loops aninhados)
 	inc dl
 	loop LLP2
 
@@ -304,15 +305,16 @@ LLP2 :
 	mov dh, 0
 	call GOTOXY
 	ret
+
 LimpaTela ENDP
 
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: drawBordas
 ;// -------------------------------------------------------------------------
 ;//	 OBJETIVO: Desenha as bordas do jogo com o caracter "/" em vermelho
-;//  PAR¬METROS: xMax - Quantidade de colunas totais do jogo
+;//  PAR√ÇMETROS: xMax - Quantidade de colunas totais do jogo
 ;//				 yMax - Quantidade de linhas totais do jogo
-;//  RETORNO: N„o Possui
+;//  RETORNO: N√£o Possui
 ;// -------------------------------------------------------------------------
 drawBordas PROC
      mov eax, gray + (black * 16)
@@ -400,9 +402,9 @@ drawBordas ENDP
 ;//  PROCEDIMENTO: PrintMapa
 ;// -------------------------------------------------------------------------
 ;//	 OBJETIVO: Desenha o mapa do jogo
-;//  PAR¬METROS: MAPCOLS - Quantidade de colunas no mapa 
+;//  PAR√ÇMETROS: MAPCOLS - Quantidade de colunas no mapa 
 ;//				 MAPROWS - Quantidade de linhas no mapa
-;//  RETORNO: N„o Possui
+;//  RETORNO: N√£o Possui
 ;// -------------------------------------------------------------------------
 PrintMapa PROC USES ecx esi ebx eax
      
@@ -417,13 +419,13 @@ L1:
      add dh, 1
      push ecx                 ;// Guarda ecx
      mov ecx, MAPCOLS         ;// ecx = numero de colunas do mapa
-     call GOTOXY              ;// FunÁ„o Irvine : Configura o cursor para a linha dh e a coluna dl
+     call GOTOXY              ;// Fun√ß√£o Irvine : Configura o cursor para a linha dh e a coluna dl
 L2:
      mov al, [esi + ebx]
      cmp al, 'A'
      je Hero
 Default:
-     call WriteChar ;// Desenha padr„o (parede ou nada)
+     call WriteChar ;// Desenha padr√£o (parede ou nada)
      jmp DefLoop
 
 Hero:
@@ -431,12 +433,12 @@ Hero:
      mov eax, white + (gray * 16)  ;// Seleciona o branco  
      call SETTEXTCOLOR
      pop eax
-     call WriteChar                ;// Desenha o herÛi
-     mov eax, black + (gray * 16)  ;// Volta para a cor padr„o
+     call WriteChar                ;// Desenha o her√≥i
+     mov eax, black + (gray * 16)  ;// Volta para a cor padr√£o
      call SETTEXTCOLOR
      jmp DefLoop
 
-DefLoop:          ;// Continua os loops padr„o
+DefLoop:          ;// Continua os loops padr√£o
      inc ebx   
      loop L2   
      pop ecx
@@ -475,24 +477,24 @@ ResetMapa ENDP
 ;// Usa:     MAPCOLS - Quantidade de colunas no mapa
 ;//		 MAPROWS - Quantidade de linhas no mapa
 ;//          Map     - Mapa (vetor de bytes)
-;//          emptyCells - cÈlulas vazias no mapa
-;//          emptyGoal - Meta de cÈlulas vazias
-;//          pos - posiÁ„o atual na matriz
+;//          emptyCells - c√©lulas vazias no mapa
+;//          emptyGoal - Meta de c√©lulas vazias
+;//          pos - posi√ß√£o atual na matriz
 ;//          direction - direcao que a geracao se movera
-;//          passos - numero de passos que ser„o dados
+;//          passos - numero de passos que ser√£o dados
 ;// Retorna: Sem retorno
 ;// ==============================================================
 GeraMapa PROC
-;// ------------------------- Reseta mapa e vari·veis
+;// ------------------------- Reseta mapa e vari√°veis
      call ResetMapa
      mov emptyCells, 0
-;// ------------------------- Randomiza a meta de cÈlulas limpas - entre 620 e 870 (aprox. 40 a 55 % do mapa)
+;// ------------------------- Randomiza a meta de c√©lulas limpas - entre 620 e 870 (aprox. 40 a 55 % do mapa)
      mov eax, 451
      call RandomRange
      add eax, 420
      mov emptyGoal, ax 
 
-;// ------------------------- Define uma posiÁ„o inicial aleatÛria NO MEIO DO MAPA e salva em pos
+;// ------------------------- Define uma posi√ß√£o inicial aleat√≥ria NO MEIO DO MAPA e salva em pos
      mov esi, OFFSET Map
      mov eax, 521
      call RandomRange
@@ -500,22 +502,22 @@ GeraMapa PROC
      mov pos, ax   
      mov posHeroi, ax
 
-;// ------------------------- Enquanto CÈlulas vazias < Meta
+;// ------------------------- Enquanto C√©lulas vazias < Meta
 WL1: mov ax, emptyGoal
      cmp emptyCells, ax
      jae Fim
 
-;// ------------------------- Randomiza direÁ„o e num. de passos (de 2 a 5)
-     ;----------- Randomiza direÁ„o (0-4)
+;// ------------------------- Randomiza dire√ß√£o e num. de passos (de 2 a 5)
+     ;----------- Randomiza dire√ß√£o (0-4)
      mov eax, 4
      call RandomRange
      mov direction, al
-     ;// --------- Randomiza n˙mero de passos (1-9)
+     ;// --------- Randomiza n√∫mero de passos (1-9)
      mov eax, 9
      call RandomRange
      inc eax
      mov passos, al
-     ;// --------- Verifica direÁ„o e salta para o trecho correspondente
+     ;// --------- Verifica dire√ß√£o e salta para o trecho correspondente
      mov esi, OFFSET Map
      cmp direction, 0
      je MoveNorth
@@ -532,10 +534,10 @@ MoveNorth:
      mov cl, passos
 MNC:
      mov ax, pos         
-     sub ax, MAPCOLS     ;// Se n„o pode mover para cima,
+     sub ax, MAPCOLS     ;// Se n√£o pode mover para cima,
      js WL1              ;// volta para o inicio
      
-     mov pos, ax;// salva a nova posiÁ„o
+     mov pos, ax;// salva a nova posi√ß√£o
 
      mov bl, ' '
      cmp[esi + eax], bl
@@ -556,11 +558,11 @@ MEC:
      mov bl, 78
      div bl       ;// (pos+1)/78 - Resto fica em AH
      cmp ah, 0
-     je WL1      ;// se (pos+1)%78 = 0, ent„o n„o È valido
+     je WL1      ;// se (pos+1)%78 = 0, ent√£o n√£o √© valido
      
      mov ax, pos
      inc ax
-     mov pos, ax  ;// salva a nova posiÁ„o
+     mov pos, ax  ;// salva a nova posi√ß√£o
 
      mov bl, ' '
      cmp[esi + eax], bl
@@ -579,10 +581,10 @@ MoveSouth:
 MSC: 
      mov ax, pos
      add ax, MAPCOLS
-     cmp ax, 1559     ;// Se n„o pode mover para baixo,
+     cmp ax, 1559     ;// Se n√£o pode mover para baixo,
      ja WL1           ;// volta para o inicio
 
-     mov pos, ax     ;// salva a nova posiÁ„o
+     mov pos, ax     ;// salva a nova posi√ß√£o
 
      mov bl, ' '
      cmp[esi + eax], bl
@@ -602,11 +604,11 @@ MWC :
      mov bl, 78
      div bl         ;// pos/78 - Resto fica em AH
      cmp ah, 0
-     je WL1         ;// se pos%78 = 0, ent„o n„o È valido
+     je WL1         ;// se pos%78 = 0, ent√£o n√£o √© valido
 
      mov ax, pos
      dec ax
-     mov pos, ax    ;// salva a nova posiÁ„o
+     mov pos, ax    ;// salva a nova posi√ß√£o
 
      mov bl, ' '
      cmp[esi + eax], bl
@@ -632,13 +634,14 @@ GeraMapa ENDP
 ;//  PROCEDIMENTO: main
 ;// -------------------------------------------------------------------------
 ;//	 OBJETIVO: Procedimento principal do jogo
-;//  PAR¬METROS: N„o Possui
-;//  RETORNO: N„o Possui
+;//  PAR√ÇMETROS: N√£o Possui
+;//  RETORNO: N√£o Possui
 ;// -------------------------------------------------------------------------
 main PROC
-	invoke SetConsoleTitle, OFFSET ctitle	;// Muda o tÌtulo do terminal
+
+	invoke SetConsoleTitle, OFFSET ctitle	;// Muda o t√≠tulo do terminal
 	call HideCursor							;// Esconde o cursor piscante
-	mov cl, 0								;// Inicia o seletor do menu na primeira opÁ„o
+	mov cl, 0								;// Inicia o seletor do menu na primeira op√ß√£o
 	call ShowMenu							;// Mostra o menu principal
 	call Randomize							;// Randomiza a seed
 	call LimpaTela							;// Limpa a tela
@@ -646,5 +649,6 @@ main PROC
 	call ResetMapa							;// Reseta o mapa
 	call GeraMapa							;// Gera um novo mapa
 	call PrintMapa							;// Desenha o mapa
+
 main ENDP
 END main

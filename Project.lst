@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.14.26429.4	    06/30/18 01:35:27
+Microsoft (R) Macro Assembler Version 14.14.26429.4	    06/30/18 15:53:00
 MASMorra.asm						     Page 1 - 1
 
 
@@ -62,31 +62,33 @@ MASMorra.asm						     Page 1 - 1
  0000000A  B2 00		     mov dl, 0                          ; Move o cursor para a posição 0, 0
  0000000C  B6 00		     mov dh, 0
  0000000E  E8 00000000 E	     call GOTOXY                        ; Função Irvine : Configura o cursor para a linha dh e a coluna dl
- 00000013  0F B6 0D		     movzx ecx, xMax                    ; Inicializa o contador do loop com a quantidade de colunas
-	   00000000 R
-
- 0000001A			LLP1 :
- 0000001A  B2 00		     mov dl, 0
- 0000001C  8A F1		     mov dh, cl
- 0000001E  E8 00000000 E	     call GOTOXY
- 00000023  51			     push ecx
- 00000024  0F B6 0D		     movzx ecx, yMax                    ; Inicializa o contador do loop com a quantidade de linhas
+ 00000013  0F B6 0D		     movzx ecx, yMax                    ; Inicializa o contador do loop com a quantidade de linhas
 	   00000001 R
- 0000002B			LLP2 :
- 0000002B  B0 20		     mov al, ' '
- 0000002D  E8 00000000 E	     call WRITECHAR                     ; Função Irvine : Escreve um caracter no terminal, tMaxX * tMaxY vezes(declarado de forma a ser dois loops aninhados)
- 00000032  E2 F7		     loop LLP2
+ 0000001A  41			     inc ecx
+ 0000001B  B0 20		     mov al, ' '
 
- 00000034  59			     pop ecx
- 00000035  E2 E3		     loop LLP1
+ 0000001D			LLP1 :
+ 0000001D  B2 00		     mov dl, 0
+ 0000001F  E8 00000000 E	     call GOTOXY
+ 00000024  51			     push ecx
+ 00000025  0F B6 0D		     movzx ecx, xMax                    ; Inicializa o contador do loop com a quantidade de colunhas
+	   00000000 R
+ 0000002C			LLP2 :
+ 0000002C  E8 00000000 E	     call WRITECHAR                     ; Função Irvine : Escreve um caracter no terminal, tMaxX * tMaxY vezes(declarado de forma a ser dois loops aninhados)
+ 00000031  FE C2		     inc dl
+ 00000033  E2 F7		     loop LLP2
 
- 00000037  B8 0000000F		     mov eax, white + (black * 16)
- 0000003C  E8 00000000 E	     call SETTEXTCOLOR
- 00000041  B2 00		     mov dl, 0
- 00000043  B6 00		     mov dh, 0
- 00000045  E8 00000000 E	     call GOTOXY
- 0000004A  C3			     ret
- 0000004B			LimpaTela ENDP
+ 00000035  FE C6		     inc dh
+ 00000037  59			     pop ecx
+ 00000038  E2 E3		     loop LLP1
+
+ 0000003A  B8 0000000F		     mov eax, white + (black * 16)
+ 0000003F  E8 00000000 E	     call SETTEXTCOLOR
+ 00000044  B2 00		     mov dl, 0
+ 00000046  B6 00		     mov dh, 0
+ 00000048  E8 00000000 E	     call GOTOXY
+ 0000004D  C3			     ret
+ 0000004E			LimpaTela ENDP
 
 				; ==============================================================
 				; Bordas PROC
@@ -95,92 +97,92 @@ MASMorra.asm						     Page 1 - 1
 				;		  yMax - Quantidade de linhas totais do jogo
 				; Retorna: Sem retorno
 				; ==============================================================
- 0000004B			Bordas PROC
- 0000004B  B8 00000008		     mov eax, gray + (black * 16)
- 00000050  E8 00000000 E	     call SetTextColor
+ 0000004E			Bordas PROC
+ 0000004E  B8 00000008		     mov eax, gray + (black * 16)
+ 00000053  E8 00000000 E	     call SetTextColor
 
 				     ; -------------------- Imprime a borda superior do mapa
- 00000055  0F B6 0D		     movzx ecx, xMax            
+ 00000058  0F B6 0D		     movzx ecx, xMax            
 	   00000000 R
- 0000005C  B0 23		     mov al, '#'
- 0000005E			L1:
- 0000005E  E8 00000000 E	     call WriteChar
- 00000063  E2 F9		     loop L1
+ 0000005F  B0 23		     mov al, '#'
+ 00000061			L1:
+ 00000061  E8 00000000 E	     call WriteChar
+ 00000066  E2 F9		     loop L1
 				     
 				     ; ------------------- Imprime as bordas laterais do mapa
- 00000065  0F B6 0D		     movzx ecx, yMax                  
+ 00000068  0F B6 0D		     movzx ecx, yMax                  
 	   00000001 R
- 0000006C  83 E9 04		     sub ecx, 4
- 0000006F  B6 01		     mov dh, 1
- 00000071			L2:
- 00000071  B2 00		     mov dl, 0
- 00000073  E8 00000000 E	     call GotoXY
- 00000078  E8 00000000 E	     call WriteChar
- 0000007D  8A 15 00000000 R	     mov dl, xMax
- 00000083  FE CA		     dec dl
- 00000085  E8 00000000 E	     call GotoXY
- 0000008A  E8 00000000 E	     call WriteChar
- 0000008F  FE C6		     inc dh
- 00000091  E2 DE		     loop L2
+ 0000006F  83 E9 04		     sub ecx, 4
+ 00000072  B6 01		     mov dh, 1
+ 00000074			L2:
+ 00000074  B2 00		     mov dl, 0
+ 00000076  E8 00000000 E	     call GotoXY
+ 0000007B  E8 00000000 E	     call WriteChar
+ 00000080  8A 15 00000000 R	     mov dl, xMax
+ 00000086  FE CA		     dec dl
+ 00000088  E8 00000000 E	     call GotoXY
+ 0000008D  E8 00000000 E	     call WriteChar
+ 00000092  FE C6		     inc dh
+ 00000094  E2 DE		     loop L2
 
 				     ; ------------------ Imprime a borda de baixo do mapa
- 00000093  B2 00		     mov dl, 0
- 00000095  8A 35 00000001 R	     mov dh, yMax
- 0000009B  80 EE 04		     sub dh, 4
- 0000009E  E8 00000000 E	     call GotoXY
- 000000A3  0F B6 0D		     movzx ecx, xMax           
+ 00000096  B2 00		     mov dl, 0
+ 00000098  8A 35 00000001 R	     mov dh, yMax
+ 0000009E  80 EE 04		     sub dh, 4
+ 000000A1  E8 00000000 E	     call GotoXY
+ 000000A6  0F B6 0D		     movzx ecx, xMax           
 	   00000000 R
- 000000AA			L3:
- 000000AA  E8 00000000 E	     call WriteChar
- 000000AF  E2 F9		     loop L3
+ 000000AD			L3:
+ 000000AD  E8 00000000 E	     call WriteChar
+ 000000B2  E2 F9		     loop L3
 
- 000000B1  B8 00000004		     mov eax, red + (black * 16)
- 000000B6  E8 00000000 E	     call SetTextColor
+ 000000B4  B8 00000004		     mov eax, red + (black * 16)
+ 000000B9  E8 00000000 E	     call SetTextColor
 
 
 				     ; --------------------Imprime a borda superior do status
- 000000BB  B0 3D		     mov al, '='
- 000000BD  B2 00		     mov dl, 0
- 000000BF  8A 35 00000001 R	     mov dh, yMax
- 000000C5  80 EE 03		     sub dh, 3
- 000000C8  E8 00000000 E	     call GotoXY
- 000000CD  0F B6 0D		     movzx ecx, xMax
+ 000000BE  B0 3D		     mov al, '='
+ 000000C0  B2 00		     mov dl, 0
+ 000000C2  8A 35 00000001 R	     mov dh, yMax
+ 000000C8  80 EE 03		     sub dh, 3
+ 000000CB  E8 00000000 E	     call GotoXY
+ 000000D0  0F B6 0D		     movzx ecx, xMax
 	   00000000 R
- 000000D4			L4:
- 000000D4  E8 00000000 E	     call WriteChar
- 000000D9  E2 F9		     loop L4
+ 000000D7			L4:
+ 000000D7  E8 00000000 E	     call WriteChar
+ 000000DC  E2 F9		     loop L4
 
 				     ; ------------------Imprime a borda de baixo do status
- 000000DB  B2 00		     mov dl, 0
- 000000DD  8A 35 00000001 R	     mov dh, yMax
- 000000E3  E8 00000000 E	     call GotoXY
- 000000E8  0F B6 0D		     movzx ecx, xMax
+ 000000DE  B2 00		     mov dl, 0
+ 000000E0  8A 35 00000001 R	     mov dh, yMax
+ 000000E6  E8 00000000 E	     call GotoXY
+ 000000EB  0F B6 0D		     movzx ecx, xMax
 	   00000000 R
- 000000EF			L5:
- 000000EF  E8 00000000 E	     call WriteChar
- 000000F4  E2 F9		     loop L5
+ 000000F2			L5:
+ 000000F2  E8 00000000 E	     call WriteChar
+ 000000F7  E2 F9		     loop L5
 				     
 				     ; ------------------ Imprime as laterais do status
- 000000F6  B0 49		     mov al, 'I'
- 000000F8  B9 00000002		     mov ecx, 2
- 000000FD  8A 35 00000001 R	     mov dh, yMax
- 00000103  80 EE 02		     sub dh, 2
- 00000106			L6:
- 00000106  B2 00		     mov dl, 0
- 00000108  E8 00000000 E	     call GotoXY
- 0000010D  E8 00000000 E	     call WriteChar
- 00000112  8A 15 00000000 R	     mov dl, xMax
- 00000118  FE CA		     dec dl
- 0000011A  E8 00000000 E	     call GotoXY
- 0000011F  E8 00000000 E	     call WriteChar
- 00000124  FE C6		     inc dh
- 00000126  E2 DE		     loop L6
+ 000000F9  B0 49		     mov al, 'I'
+ 000000FB  B9 00000002		     mov ecx, 2
+ 00000100  8A 35 00000001 R	     mov dh, yMax
+ 00000106  80 EE 02		     sub dh, 2
+ 00000109			L6:
+ 00000109  B2 00		     mov dl, 0
+ 0000010B  E8 00000000 E	     call GotoXY
+ 00000110  E8 00000000 E	     call WriteChar
+ 00000115  8A 15 00000000 R	     mov dl, xMax
+ 0000011B  FE CA		     dec dl
+ 0000011D  E8 00000000 E	     call GotoXY
+ 00000122  E8 00000000 E	     call WriteChar
+ 00000127  FE C6		     inc dh
+ 00000129  E2 DE		     loop L6
 
 				     ; ------- Reseta a cor e retorna
- 00000128  B8 0000000F		     mov eax, white + (black * 16)
- 0000012D  E8 00000000 E	     call SetTextColor
- 00000132  C3			     ret
- 00000133			Bordas ENDP
+ 0000012B  B8 0000000F		     mov eax, white + (black * 16)
+ 00000130  E8 00000000 E	     call SetTextColor
+ 00000135  C3			     ret
+ 00000136			Bordas ENDP
 
 				; ============================================================== 
 				; PrintMapa PROC
@@ -189,59 +191,59 @@ MASMorra.asm						     Page 1 - 1
 				;		 MAPROWS - Quantidade de linhas no mapa
 				; Retorna: Sem retorno
 				; ==============================================================
- 00000133			PrintMapa PROC USES ecx esi ebx eax
+ 00000136			PrintMapa PROC USES ecx esi ebx eax
 				     
- 00000133  51		   *	    push   ecx
- 00000134  56		   *	    push   esi
- 00000135  53		   *	    push   ebx
- 00000136  50		   *	    push   eax
- 00000137  B8 00000080		     mov eax, black + (gray * 16)
- 0000013C  E8 00000000 E	     call SETTEXTCOLOR
- 00000141  B6 00		     mov dh, 0
- 00000143  B2 01		     mov dl, 1
- 00000145  B9 00000014		     mov ecx, MAPROWS
- 0000014A  BE 00000002 R	     mov esi, OFFSET map
- 0000014F  BB 00000000		     mov ebx, 0
- 00000154			L1:
- 00000154  80 C6 01		     add dh, 1
- 00000157  51			     push ecx                 ; Guarda ecx
- 00000158  B9 0000004E		     mov ecx, MAPCOLS         ; ecx = numero de colunas do mapa
- 0000015D  E8 00000000 E	     call GOTOXY              ; Função Irvine : Configura o cursor para a linha dh e a coluna dl
- 00000162			L2:
- 00000162  8A 04 1E		     mov al, [esi + ebx]
- 00000165  3C 41		     cmp al, 'A'
- 00000167  74 07		     je Hero
- 00000169			Default:
- 00000169  E8 00000000 E	     call WriteChar ; Desenha padrão (parede ou nada)
- 0000016E  EB 1D		     jmp DefLoop
+ 00000136  51		   *	    push   ecx
+ 00000137  56		   *	    push   esi
+ 00000138  53		   *	    push   ebx
+ 00000139  50		   *	    push   eax
+ 0000013A  B8 00000080		     mov eax, black + (gray * 16)
+ 0000013F  E8 00000000 E	     call SETTEXTCOLOR
+ 00000144  B6 00		     mov dh, 0
+ 00000146  B2 01		     mov dl, 1
+ 00000148  B9 00000014		     mov ecx, MAPROWS
+ 0000014D  BE 00000002 R	     mov esi, OFFSET map
+ 00000152  BB 00000000		     mov ebx, 0
+ 00000157			L1:
+ 00000157  80 C6 01		     add dh, 1
+ 0000015A  51			     push ecx                 ; Guarda ecx
+ 0000015B  B9 0000004E		     mov ecx, MAPCOLS         ; ecx = numero de colunas do mapa
+ 00000160  E8 00000000 E	     call GOTOXY              ; Função Irvine : Configura o cursor para a linha dh e a coluna dl
+ 00000165			L2:
+ 00000165  8A 04 1E		     mov al, [esi + ebx]
+ 00000168  3C 41		     cmp al, 'A'
+ 0000016A  74 07		     je Hero
+ 0000016C			Default:
+ 0000016C  E8 00000000 E	     call WriteChar ; Desenha padrão (parede ou nada)
+ 00000171  EB 1D		     jmp DefLoop
 
- 00000170			Hero:
- 00000170  50			     push eax                      ; guarda 
- 00000171  B8 0000008F		     mov eax, white + (gray * 16)  ; Seleciona o branco  
- 00000176  E8 00000000 E	     call SETTEXTCOLOR
- 0000017B  58			     pop eax
- 0000017C  E8 00000000 E	     call WriteChar                ; Desenha o herói
- 00000181  B8 00000080		     mov eax, black + (gray * 16)  ; Volta para a cor padrão
- 00000186  E8 00000000 E	     call SETTEXTCOLOR
- 0000018B  EB 00		     jmp DefLoop
+ 00000173			Hero:
+ 00000173  50			     push eax                      ; guarda 
+ 00000174  B8 0000008F		     mov eax, white + (gray * 16)  ; Seleciona o branco  
+ 00000179  E8 00000000 E	     call SETTEXTCOLOR
+ 0000017E  58			     pop eax
+ 0000017F  E8 00000000 E	     call WriteChar                ; Desenha o herói
+ 00000184  B8 00000080		     mov eax, black + (gray * 16)  ; Volta para a cor padrão
+ 00000189  E8 00000000 E	     call SETTEXTCOLOR
+ 0000018E  EB 00		     jmp DefLoop
 
- 0000018D			DefLoop:          ; Continua os loops padrão
- 0000018D  43			     inc ebx   
- 0000018E  E2 D2		     loop L2   
- 00000190  59			     pop ecx
- 00000191  E2 C1		     loop L1
+ 00000190			DefLoop:          ; Continua os loops padrão
+ 00000190  43			     inc ebx   
+ 00000191  E2 D2		     loop L2   
+ 00000193  59			     pop ecx
+ 00000194  E2 C1		     loop L1
 				     
 				     ; Reseta a cor do print
- 00000193  B8 0000000F		     mov eax, white + (black * 16)
- 00000198  E8 00000000 E	     call SETTEXTCOLOR
+ 00000196  B8 0000000F		     mov eax, white + (black * 16)
+ 0000019B  E8 00000000 E	     call SETTEXTCOLOR
 
 				     ret
- 0000019D  58		   *	    pop    eax
- 0000019E  5B		   *	    pop    ebx
- 0000019F  5E		   *	    pop    esi
- 000001A0  59		   *	    pop    ecx
- 000001A1  C3		   *	    ret    00000h
- 000001A2			PrintMapa ENDP
+ 000001A0  58		   *	    pop    eax
+ 000001A1  5B		   *	    pop    ebx
+ 000001A2  5E		   *	    pop    esi
+ 000001A3  59		   *	    pop    ecx
+ 000001A4  C3		   *	    ret    00000h
+ 000001A5			PrintMapa ENDP
 
 				; ==============================================================
 				; ResetMapa PROC
@@ -250,18 +252,18 @@ MASMorra.asm						     Page 1 - 1
 				;		 MAPROWS - Quantidade de linhas no mapa
 				; Retorna: Sem retorno
 				; ==============================================================
- 000001A2			ResetMapa PROC
- 000001A2  B9 00000000		     mov ecx, 0
- 000001A7  BE 00000002 R	     mov esi, OFFSET Map
- 000001AC  B0 23		     mov al, '#'
- 000001AE			L1:
- 000001AE  88 04 0E		     mov [esi+ecx], al
- 000001B1  41			     inc ecx
- 000001B2  81 F9 00000618	     cmp ecx, LENGTHOF Map
- 000001B8  72 F4		     jb L1
+ 000001A5			ResetMapa PROC
+ 000001A5  B9 00000000		     mov ecx, 0
+ 000001AA  BE 00000002 R	     mov esi, OFFSET Map
+ 000001AF  B0 23		     mov al, '#'
+ 000001B1			L1:
+ 000001B1  88 04 0E		     mov [esi+ecx], al
+ 000001B4  41			     inc ecx
+ 000001B5  81 F9 00000618	     cmp ecx, LENGTHOF Map
+ 000001BB  72 F4		     jb L1
 				     
- 000001BA  C3			     ret
- 000001BB			ResetMapa ENDP
+ 000001BD  C3			     ret
+ 000001BE			ResetMapa ENDP
 
 				; ==============================================================
 				; GeraMapa PROC
@@ -276,177 +278,177 @@ MASMorra.asm						     Page 1 - 1
 				;          passos - numero de passos que serão dados
 				; Retorna: Sem retorno
 				; ==============================================================
- 000001BB			GeraMapa PROC
+ 000001BE			GeraMapa PROC
 				; ------------------------- Reseta mapa e variáveis
- 000001BB  E8 FFFFFFE2		     call ResetMapa
- 000001C0  66| C7 05		     mov emptyCells, 0
+ 000001BE  E8 FFFFFFE2		     call ResetMapa
+ 000001C3  66| C7 05		     mov emptyCells, 0
 	   0000061C R
 	   0000
 				; ------------------------- Randomiza a meta de células limpas - entre 620 e 870 (aprox. 40 a 55 % do mapa)
- 000001C9  B8 000001C3		     mov eax, 451
- 000001CE  E8 00000000 E	     call RandomRange
- 000001D3  05 000001A4		     add eax, 420
- 000001D8  66| A3		     mov emptyGoal, ax 
+ 000001CC  B8 000001C3		     mov eax, 451
+ 000001D1  E8 00000000 E	     call RandomRange
+ 000001D6  05 000001A4		     add eax, 420
+ 000001DB  66| A3		     mov emptyGoal, ax 
 	   0000061E R
 
 				; ------------------------- Define uma posição inicial aleatória NO MEIO DO MAPA e salva em pos
- 000001DE  BE 00000002 R	     mov esi, OFFSET Map
- 000001E3  B8 00000209		     mov eax, 521
- 000001E8  E8 00000000 E	     call RandomRange
- 000001ED  05 00000208		     add eax, 520
- 000001F2  66| A3		     mov pos, ax   
+ 000001E1  BE 00000002 R	     mov esi, OFFSET Map
+ 000001E6  B8 00000209		     mov eax, 521
+ 000001EB  E8 00000000 E	     call RandomRange
+ 000001F0  05 00000208		     add eax, 520
+ 000001F5  66| A3		     mov pos, ax   
 	   00000621 R
- 000001F8  66| A3		     mov posHeroi, ax
+ 000001FB  66| A3		     mov posHeroi, ax
 	   0000061A R
 
 				; ------------------------- Enquanto Células vazias < Meta
- 000001FE  66| A1		WL1: mov ax, emptyGoal
+ 00000201  66| A1		WL1: mov ax, emptyGoal
 	   0000061E R
- 00000204  66| 39 05		     cmp emptyCells, ax
+ 00000207  66| 39 05		     cmp emptyCells, ax
 	   0000061C R
- 0000020B  0F 83 00000140	     jae Fim
+ 0000020E  0F 83 00000140	     jae Fim
 
 				; ------------------------- Randomiza direção e num. de passos (de 2 a 5)
 				     ;----------- Randomiza direção (0-4)
- 00000211  B8 00000004		     mov eax, 4
- 00000216  E8 00000000 E	     call RandomRange
- 0000021B  A2 00000620 R	     mov direction, al
+ 00000214  B8 00000004		     mov eax, 4
+ 00000219  E8 00000000 E	     call RandomRange
+ 0000021E  A2 00000620 R	     mov direction, al
 				     ; --------- Randomiza número de passos (1-9)
- 00000220  B8 00000009		     mov eax, 9
- 00000225  E8 00000000 E	     call RandomRange
- 0000022A  40			     inc eax
- 0000022B  A2 00000623 R	     mov passos, al
+ 00000223  B8 00000009		     mov eax, 9
+ 00000228  E8 00000000 E	     call RandomRange
+ 0000022D  40			     inc eax
+ 0000022E  A2 00000623 R	     mov passos, al
 				     ; --------- Verifica direção e salta para o trecho correspondente
- 00000230  BE 00000002 R	     mov esi, OFFSET Map
- 00000235  80 3D 00000620 R	     cmp direction, 0
+ 00000233  BE 00000002 R	     mov esi, OFFSET Map
+ 00000238  80 3D 00000620 R	     cmp direction, 0
 	   00
- 0000023C  74 23		     je MoveNorth
- 0000023E  80 3D 00000620 R	     cmp direction, 1
+ 0000023F  74 23		     je MoveNorth
+ 00000241  80 3D 00000620 R	     cmp direction, 1
 	   01
- 00000245  74 4C		     je MoveEast
- 00000247  80 3D 00000620 R	     cmp direction, 2
+ 00000248  74 4C		     je MoveEast
+ 0000024A  80 3D 00000620 R	     cmp direction, 2
 	   02
- 0000024E  0F 84 00000082	     je MoveSouth
- 00000254  80 3D 00000620 R	     cmp direction, 3
+ 00000251  0F 84 00000082	     je MoveSouth
+ 00000257  80 3D 00000620 R	     cmp direction, 3
 	   03
- 0000025B  0F 84 000000AF	     je MoveWest
+ 0000025E  0F 84 000000AF	     je MoveWest
 
- 00000261			MoveNorth:
+ 00000264			MoveNorth:
 				     ; ---------- Tira paredes para o norte
- 00000261  33 C9		     xor ecx, ecx
- 00000263  8A 0D 00000623 R	     mov cl, passos
- 00000269			MNC:
- 00000269  66| A1		     mov ax, pos         
+ 00000264  33 C9		     xor ecx, ecx
+ 00000266  8A 0D 00000623 R	     mov cl, passos
+ 0000026C			MNC:
+ 0000026C  66| A1		     mov ax, pos         
 	   00000621 R
- 0000026F  66| 83 E8 4E		     sub ax, MAPCOLS     ; Se não pode mover para cima,
- 00000273  78 89		     js WL1              ; volta para o inicio
+ 00000272  66| 83 E8 4E		     sub ax, MAPCOLS     ; Se não pode mover para cima,
+ 00000276  78 89		     js WL1              ; volta para o inicio
 				     
- 00000275  66| A3		     mov pos, ax; salva a nova posição
+ 00000278  66| A3		     mov pos, ax; salva a nova posição
 	   00000621 R
 
- 0000027B  B3 20		     mov bl, ' '
- 0000027D  38 1C 06		     cmp[esi + eax], bl
- 00000280  74 0A		     je NowriteN
- 00000282  66| FF 05		     inc emptyCells
+ 0000027E  B3 20		     mov bl, ' '
+ 00000280  38 1C 06		     cmp[esi + eax], bl
+ 00000283  74 0A		     je NowriteN
+ 00000285  66| FF 05		     inc emptyCells
 	   0000061C R
- 00000289  88 1C 06		     mov[esi + eax], bl
- 0000028C			NowriteN:  
- 0000028C  E2 DB		     loop MNC
- 0000028E  E9 FFFFFF6B		     jmp WL1
+ 0000028C  88 1C 06		     mov[esi + eax], bl
+ 0000028F			NowriteN:  
+ 0000028F  E2 DB		     loop MNC
+ 00000291  E9 FFFFFF6B		     jmp WL1
 
- 00000293			MoveEast:
+ 00000296			MoveEast:
 				     ; ----------Tira paredes para o leste
- 00000293  33 C9		     xor ecx, ecx
- 00000295  8A 0D 00000623 R	     mov cl, passos
- 0000029B			MEC: 
- 0000029B  66| A1		     mov ax, pos
+ 00000296  33 C9		     xor ecx, ecx
+ 00000298  8A 0D 00000623 R	     mov cl, passos
+ 0000029E			MEC: 
+ 0000029E  66| A1		     mov ax, pos
 	   00000621 R
- 000002A1  66| 40		     inc ax       ; ax = pos+1
- 000002A3  B3 4E		     mov bl, 78
- 000002A5  F6 F3		     div bl       ; (pos+1)/78 - Resto fica em AH
- 000002A7  80 FC 00		     cmp ah, 0
- 000002AA  0F 84 FFFFFF4E	     je WL1      ; se (pos+1)%78 = 0, então não é valido
+ 000002A4  66| 40		     inc ax       ; ax = pos+1
+ 000002A6  B3 4E		     mov bl, 78
+ 000002A8  F6 F3		     div bl       ; (pos+1)/78 - Resto fica em AH
+ 000002AA  80 FC 00		     cmp ah, 0
+ 000002AD  0F 84 FFFFFF4E	     je WL1      ; se (pos+1)%78 = 0, então não é valido
 				     
- 000002B0  66| A1		     mov ax, pos
+ 000002B3  66| A1		     mov ax, pos
 	   00000621 R
- 000002B6  66| 40		     inc ax
- 000002B8  66| A3		     mov pos, ax  ; salva a nova posição
+ 000002B9  66| 40		     inc ax
+ 000002BB  66| A3		     mov pos, ax  ; salva a nova posição
 	   00000621 R
 
- 000002BE  B3 20		     mov bl, ' '
- 000002C0  38 1C 06		     cmp[esi + eax], bl
- 000002C3  74 0A		     je NowriteE
- 000002C5  66| FF 05		     inc emptyCells
+ 000002C1  B3 20		     mov bl, ' '
+ 000002C3  38 1C 06		     cmp[esi + eax], bl
+ 000002C6  74 0A		     je NowriteE
+ 000002C8  66| FF 05		     inc emptyCells
 	   0000061C R
- 000002CC  88 1C 06		     mov[esi + eax], bl
- 000002CF			NowriteE:  
- 000002CF  E2 CA		     loop MEC
- 000002D1  E9 FFFFFF28		     jmp WL1
+ 000002CF  88 1C 06		     mov[esi + eax], bl
+ 000002D2			NowriteE:  
+ 000002D2  E2 CA		     loop MEC
+ 000002D4  E9 FFFFFF28		     jmp WL1
 
 
- 000002D6			MoveSouth:
+ 000002D9			MoveSouth:
 				     ; ----------Tira paredes para o sul
- 000002D6  33 C9		     xor ecx, ecx
- 000002D8  8A 0D 00000623 R	     mov cl, passos
- 000002DE			MSC: 
- 000002DE  66| A1		     mov ax, pos
+ 000002D9  33 C9		     xor ecx, ecx
+ 000002DB  8A 0D 00000623 R	     mov cl, passos
+ 000002E1			MSC: 
+ 000002E1  66| A1		     mov ax, pos
 	   00000621 R
- 000002E4  66| 83 C0 4E		     add ax, MAPCOLS
- 000002E8  66| 3D 0617		     cmp ax, 1559     ; Se não pode mover para baixo,
- 000002EC  0F 87 FFFFFF0C	     ja WL1           ; volta para o inicio
+ 000002E7  66| 83 C0 4E		     add ax, MAPCOLS
+ 000002EB  66| 3D 0617		     cmp ax, 1559     ; Se não pode mover para baixo,
+ 000002EF  0F 87 FFFFFF0C	     ja WL1           ; volta para o inicio
 
- 000002F2  66| A3		     mov pos, ax     ; salva a nova posição
+ 000002F5  66| A3		     mov pos, ax     ; salva a nova posição
 	   00000621 R
 
- 000002F8  B3 20		     mov bl, ' '
- 000002FA  38 1C 06		     cmp[esi + eax], bl
- 000002FD  74 0A		     je NowriteS
- 000002FF  66| FF 05		     inc emptyCells
+ 000002FB  B3 20		     mov bl, ' '
+ 000002FD  38 1C 06		     cmp[esi + eax], bl
+ 00000300  74 0A		     je NowriteS
+ 00000302  66| FF 05		     inc emptyCells
 	   0000061C R
- 00000306  88 1C 06		     mov[esi + eax], bl
- 00000309			NowriteS:  
- 00000309  E2 D3		     loop MSC
- 0000030B  E9 FFFFFEEE		     jmp WL1
+ 00000309  88 1C 06		     mov[esi + eax], bl
+ 0000030C			NowriteS:  
+ 0000030C  E2 D3		     loop MSC
+ 0000030E  E9 FFFFFEEE		     jmp WL1
 
- 00000310			MoveWest:
+ 00000313			MoveWest:
 				     ; ----------Tira paredes para o oeste
- 00000310  33 C9		     xor ecx, ecx
- 00000312  8A 0D 00000623 R	     mov cl, passos
- 00000318			MWC :
- 00000318  66| A1		     mov ax, pos
+ 00000313  33 C9		     xor ecx, ecx
+ 00000315  8A 0D 00000623 R	     mov cl, passos
+ 0000031B			MWC :
+ 0000031B  66| A1		     mov ax, pos
 	   00000621 R
- 0000031E  B3 4E		     mov bl, 78
- 00000320  F6 F3		     div bl         ; pos/78 - Resto fica em AH
- 00000322  80 FC 00		     cmp ah, 0
- 00000325  0F 84 FFFFFED3	     je WL1         ; se pos%78 = 0, então não é valido
+ 00000321  B3 4E		     mov bl, 78
+ 00000323  F6 F3		     div bl         ; pos/78 - Resto fica em AH
+ 00000325  80 FC 00		     cmp ah, 0
+ 00000328  0F 84 FFFFFED3	     je WL1         ; se pos%78 = 0, então não é valido
 
- 0000032B  66| A1		     mov ax, pos
+ 0000032E  66| A1		     mov ax, pos
 	   00000621 R
- 00000331  66| 48		     dec ax
- 00000333  66| A3		     mov pos, ax    ; salva a nova posição
+ 00000334  66| 48		     dec ax
+ 00000336  66| A3		     mov pos, ax    ; salva a nova posição
 	   00000621 R
 
- 00000339  B3 20		     mov bl, ' '
- 0000033B  38 1C 06		     cmp[esi + eax], bl
- 0000033E  74 0A		     je NowriteW
- 00000340  66| FF 05		     inc emptyCells
+ 0000033C  B3 20		     mov bl, ' '
+ 0000033E  38 1C 06		     cmp[esi + eax], bl
+ 00000341  74 0A		     je NowriteW
+ 00000343  66| FF 05		     inc emptyCells
 	   0000061C R
- 00000347  88 1C 06		     mov[esi + eax], bl
- 0000034A			NowriteW:  
- 0000034A  E2 CC		     loop MWC
- 0000034C  E9 FFFFFEAD		     jmp WL1
+ 0000034A  88 1C 06		     mov[esi + eax], bl
+ 0000034D			NowriteW:  
+ 0000034D  E2 CC		     loop MWC
+ 0000034F  E9 FFFFFEAD		     jmp WL1
 
 
 
- 00000351			Fim:
+ 00000354			Fim:
 				     ; -------- - Insere Personagem no mapa
- 00000351  66| A1		     mov ax, posHeroi
+ 00000354  66| A1		     mov ax, posHeroi
 	   0000061A R
- 00000357  B3 41		     mov bl, 'A'
- 00000359  88 1C 06		     mov[esi + eax], bl
+ 0000035A  B3 41		     mov bl, 'A'
+ 0000035C  88 1C 06		     mov[esi + eax], bl
 
- 0000035C  C3			     ret
- 0000035D			GeraMapa ENDP
+ 0000035F  C3			     ret
+ 00000360			GeraMapa ENDP
 
 				; *=============================================================
 				; main PROC
@@ -454,17 +456,18 @@ MASMorra.asm						     Page 1 - 1
 				; Usa:      Sem parâmetros
 				; Retorna:  Sem retorno
 				; =============================================================
- 0000035D			main PROC
- 0000035D  E8 00000000 E	     call Randomize      ; Randomiza a seed
- 00000362  E8 FFFFFC99		     call LimpaTela
- 00000367  E8 FFFFFCDF		     call Bordas
- 0000036C  E8 FFFFFE31		     call ResetMapa      
- 00000371  E8 FFFFFE45		     call GeraMapa
- 00000376  E8 FFFFFDB8		     call PrintMapa
+ 00000360			main PROC
+ 00000360  E8 00000000 E	     call Randomize      ; Randomiza a seed
+ 00000365  E8 FFFFFC96		     call LimpaTela
+ 0000036A  E8 FFFFFCDF		     call Bordas
+ 0000036F  E8 FFFFFE31		     call ResetMapa      
+ 00000374  E8 FFFFFE45		     call GeraMapa
+ 00000379  E8 FFFFFDB8		     call PrintMapa
+ 0000037E  E8 FFFFFC7D		     call LimpaTela
 
- 0000037B			main ENDP
+ 00000383			main ENDP
 				END main
-Microsoft (R) Macro Assembler Version 14.14.26429.4	    06/30/18 01:35:27
+Microsoft (R) Macro Assembler Version 14.14.26429.4	    06/30/18 15:53:00
 MASMorra.asm						     Symbols 2 - 1
 
 
@@ -559,20 +562,20 @@ Segments and Groups:
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
 _DATA  . . . . . . . . . . . . .	32 Bit	 00000624 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 0000037B Para	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000383 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
 
                 N a m e                 Type     Value    Attr
 
-Bordas . . . . . . . . . . . . .	P Near	 0000004B _TEXT	Length= 000000E8 Public STDCALL
-  L1 . . . . . . . . . . . . . .	L Near	 0000005E _TEXT	
-  L2 . . . . . . . . . . . . . .	L Near	 00000071 _TEXT	
-  L3 . . . . . . . . . . . . . .	L Near	 000000AA _TEXT	
-  L4 . . . . . . . . . . . . . .	L Near	 000000D4 _TEXT	
-  L5 . . . . . . . . . . . . . .	L Near	 000000EF _TEXT	
-  L6 . . . . . . . . . . . . . .	L Near	 00000106 _TEXT	
+Bordas . . . . . . . . . . . . .	P Near	 0000004E _TEXT	Length= 000000E8 Public STDCALL
+  L1 . . . . . . . . . . . . . .	L Near	 00000061 _TEXT	
+  L2 . . . . . . . . . . . . . .	L Near	 00000074 _TEXT	
+  L3 . . . . . . . . . . . . . .	L Near	 000000AD _TEXT	
+  L4 . . . . . . . . . . . . . .	L Near	 000000D7 _TEXT	
+  L5 . . . . . . . . . . . . . .	L Near	 000000F2 _TEXT	
+  L6 . . . . . . . . . . . . . .	L Near	 00000109 _TEXT	
 CloseFile  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 CloseHandle  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 Clrscr . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -587,21 +590,21 @@ FileTimeToDosDateTime  . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 FileTimeToSystemTime . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 FlushConsoleInputBuffer  . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 FormatMessageA . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-GeraMapa . . . . . . . . . . . .	P Near	 000001BB _TEXT	Length= 000001A2 Public STDCALL
-  WL1  . . . . . . . . . . . . .	L Near	 000001FE _TEXT	
-  MoveNorth  . . . . . . . . . .	L Near	 00000261 _TEXT	
-  MNC  . . . . . . . . . . . . .	L Near	 00000269 _TEXT	
-  NowriteN . . . . . . . . . . .	L Near	 0000028C _TEXT	
-  MoveEast . . . . . . . . . . .	L Near	 00000293 _TEXT	
-  MEC  . . . . . . . . . . . . .	L Near	 0000029B _TEXT	
-  NowriteE . . . . . . . . . . .	L Near	 000002CF _TEXT	
-  MoveSouth  . . . . . . . . . .	L Near	 000002D6 _TEXT	
-  MSC  . . . . . . . . . . . . .	L Near	 000002DE _TEXT	
-  NowriteS . . . . . . . . . . .	L Near	 00000309 _TEXT	
-  MoveWest . . . . . . . . . . .	L Near	 00000310 _TEXT	
-  MWC  . . . . . . . . . . . . .	L Near	 00000318 _TEXT	
-  NowriteW . . . . . . . . . . .	L Near	 0000034A _TEXT	
-  Fim  . . . . . . . . . . . . .	L Near	 00000351 _TEXT	
+GeraMapa . . . . . . . . . . . .	P Near	 000001BE _TEXT	Length= 000001A2 Public STDCALL
+  WL1  . . . . . . . . . . . . .	L Near	 00000201 _TEXT	
+  MoveNorth  . . . . . . . . . .	L Near	 00000264 _TEXT	
+  MNC  . . . . . . . . . . . . .	L Near	 0000026C _TEXT	
+  NowriteN . . . . . . . . . . .	L Near	 0000028F _TEXT	
+  MoveEast . . . . . . . . . . .	L Near	 00000296 _TEXT	
+  MEC  . . . . . . . . . . . . .	L Near	 0000029E _TEXT	
+  NowriteE . . . . . . . . . . .	L Near	 000002D2 _TEXT	
+  MoveSouth  . . . . . . . . . .	L Near	 000002D9 _TEXT	
+  MSC  . . . . . . . . . . . . .	L Near	 000002E1 _TEXT	
+  NowriteS . . . . . . . . . . .	L Near	 0000030C _TEXT	
+  MoveWest . . . . . . . . . . .	L Near	 00000313 _TEXT	
+  MWC  . . . . . . . . . . . . .	L Near	 0000031B _TEXT	
+  NowriteW . . . . . . . . . . .	L Near	 0000034D _TEXT	
+  Fim  . . . . . . . . . . . . .	L Near	 00000354 _TEXT	
 GetCommandLineA  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 GetCommandTail . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 GetConsoleCP . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -628,9 +631,9 @@ HeapDestroy  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 HeapFree . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 HeapSize . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 IsDigit  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-LimpaTela  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000004B Public STDCALL
-  LLP1 . . . . . . . . . . . . .	L Near	 0000001A _TEXT	
-  LLP2 . . . . . . . . . . . . .	L Near	 0000002B _TEXT	
+LimpaTela  . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000004E Public STDCALL
+  LLP1 . . . . . . . . . . . . .	L Near	 0000001D _TEXT	
+  LLP2 . . . . . . . . . . . . .	L Near	 0000002C _TEXT	
 LocalFree  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 MessageBoxA  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 MsgBoxAsk  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -639,12 +642,12 @@ OpenInputFile  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 ParseDecimal32 . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ParseInteger32 . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 PeekConsoleInputA  . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-PrintMapa  . . . . . . . . . . .	P Near	 00000133 _TEXT	Length= 0000006F Public STDCALL
-  L1 . . . . . . . . . . . . . .	L Near	 00000154 _TEXT	
-  L2 . . . . . . . . . . . . . .	L Near	 00000162 _TEXT	
-  Default  . . . . . . . . . . .	L Near	 00000169 _TEXT	
-  Hero . . . . . . . . . . . . .	L Near	 00000170 _TEXT	
-  DefLoop  . . . . . . . . . . .	L Near	 0000018D _TEXT	
+PrintMapa  . . . . . . . . . . .	P Near	 00000136 _TEXT	Length= 0000006F Public STDCALL
+  L1 . . . . . . . . . . . . . .	L Near	 00000157 _TEXT	
+  L2 . . . . . . . . . . . . . .	L Near	 00000165 _TEXT	
+  Default  . . . . . . . . . . .	L Near	 0000016C _TEXT	
+  Hero . . . . . . . . . . . . .	L Near	 00000173 _TEXT	
+  DefLoop  . . . . . . . . . . .	L Near	 00000190 _TEXT	
 Random32 . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 RandomRange  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 Randomize  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -660,8 +663,8 @@ ReadInt  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 ReadKeyFlush . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadKey  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadString . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-ResetMapa  . . . . . . . . . . .	P Near	 000001A2 _TEXT	Length= 00000019 Public STDCALL
-  L1 . . . . . . . . . . . . . .	L Near	 000001AE _TEXT	
+ResetMapa  . . . . . . . . . . .	P Near	 000001A5 _TEXT	Length= 00000019 Public STDCALL
+  L1 . . . . . . . . . . . . . .	L Near	 000001B1 _TEXT	
 SetConsoleCursorInfo . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleCursorPosition . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleMode . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -699,7 +702,7 @@ WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-main . . . . . . . . . . . . . .	P Near	 0000035D _TEXT	Length= 0000001E Public STDCALL
+main . . . . . . . . . . . . . .	P Near	 00000360 _TEXT	Length= 00000023 Public STDCALL
 printf . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C

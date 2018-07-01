@@ -24,18 +24,25 @@ yMax BYTE ROWS      ;// númer maximo de linhas
 ;// -------------------------------------------------------------------------
 Map BYTE MAPCOLS*MAPROWS Dup(?)	;// vetor de (colunas*linhas) posições. 
 posHeroi WORD 0						;// Posição atual do heroi
-HeroiChar BYTE 'O'
+HeroiChar BYTE 233
 posEscada WORD 0
-EscadaChar BYTE 'H'
-paredeChar BYTE '#'
+EscadaChar BYTE 240
+paredeChar BYTE 178
 vazioChar  BYTE ' '
+bauChar BYTE 254
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: CONTROLE E EXIBIÇÃO DE VARIÁVEIS DO JOGO
 ;// -------------------------------------------------------------------------
 Level BYTE 0   ;// Nível atual
 inStairs DB 0  ;// Indica se o jogador se encontra na escada
-strLevel DB 'LEVEL',0
+strLevel DB 'LEVEL: ',0
+Health WORD 10
+strHealth DB 'HEALTH: ',0
+Attack BYTE 2
+strAttack DB 'ATTACK: ',0
+Gold WORD 0
+strGold DB 'GOLD: ',0
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: GERAÇÃO DE MAPAS
@@ -334,13 +341,21 @@ drawBordas PROC uses eax ecx edx
      call SetTextColor
 
      ;// -------------------- Imprime a borda superior do mapa
-     movzx ecx, xMax            
-     mov al, paredeChar
+     mov al, 201
+     call WriteChar
+
+     movzx ecx, xMax
+     sub ecx, 2
+     mov al, 205
 L1:
      call WriteChar
      loop L1
-     
+
+     mov al, 187
+     call WriteChar
+
      ;// ------------------- Imprime as bordas laterais do mapa
+     mov al, 186
      movzx ecx, yMax                  
      sub ecx, 4
      mov dh, 1
@@ -360,47 +375,71 @@ L2:
      mov dh, yMax
      sub dh, 4
      call GotoXY
-     movzx ecx, xMax           
+     
+     mov al, 200
+     call WriteChar
+
+     movzx ecx, xMax  
+     sub ecx, 2
+     mov al, 205
+
 L3:
      call WriteChar
      loop L3
+
+     mov al, 188
+     call WriteChar
 
      mov eax, red + (black * 16)
      call SetTextColor
 
 
      ;// --------------------Imprime a borda superior do status
-     mov al, '='
+     mov al, 201
      mov dl, 0
      mov dh, yMax
      sub dh, 3
      call GotoXY
+     call WriteChar
      movzx ecx, xMax
+     sub ecx, 2
+     mov al, 207
 L4:
      call WriteChar
      loop L4
 
+     mov al, 187
+     call WriteChar
+
      ;// ------------------Imprime a borda de baixo do status
+     mov al, 200
      mov dl, 0
      mov dh, yMax
      call GotoXY
+     call writeChar
      movzx ecx, xMax
+     sub ecx, 2
+     mov al, 209
 L5:
      call WriteChar
      loop L5
+          
+     mov al, 188
+     call WriteChar
      
      ;// ------------------ Imprime as laterais do status
-     mov al, 'I'
      mov ecx, 2
      mov dh, yMax
      sub dh, 2
 L6:
      mov dl, 0
      call GotoXY
+     mov al, 182
      call WriteChar
      mov dl, xMax
      dec dl
      call GotoXY
+     mov al, 199
      call WriteChar
      inc dh
      loop L6
@@ -425,17 +464,32 @@ drawStatus PROC uses eax edx
      call SetTextColor
 
      ;// ---- LEVEL
-     mov dh, 23
+     mov dh, 23     ;// move para a posição
      mov dl, 5
      call GotoXY
      mov edx, OFFSET strLevel
      call WriteString
-     mov dh, 24
-     mov dl, 7
-     call GotoXY
      mov al, Level
      call WriteDec
      
+     ;// ---- HEALTH
+     mov dh, 23     ;// move para a posição
+     mov dl, 25
+     call GotoXY
+     mov edx, OFFSET strHealth
+     call WriteString
+     mov ax, Health
+     call WriteDec
+
+     ;// ---- GOLD
+     mov dh, 23     ;// move para a posição
+     mov dl, 45
+     call GotoXY
+     mov edx, OFFSET strGold
+     call WriteString
+     mov ax, Gold
+     call WriteDec
+
      call HideCursor
      ret
 drawStatus ENDP
@@ -469,6 +523,12 @@ L2:
      je Hero
      cmp al, EscadaChar
      je Escada
+     cmp al, BauChar
+     je Bau
+     push eax
+     mov eax, black + (gray * 16);// Volta para a cor padrão
+     call SETTEXTCOLOR
+     pop eax
 Default:
      call WriteChar ;// Desenha padrão (parede ou nada)
      jmp DefLoop
@@ -478,20 +538,21 @@ Hero:
      mov eax, white + (gray * 16)  ;// Seleciona o branco  
      call SETTEXTCOLOR
      pop eax
-     call WriteChar                ;// Desenha o herói
-     mov eax, black + (gray * 16)  ;// Volta para a cor padrão
-     call SETTEXTCOLOR
-     jmp DefLoop
+     jmp Default
 
 Escada:
      push eax                      ;// guarda 
      mov eax, lightGreen + (gray * 16)  ;// Seleciona o branco  
      call SETTEXTCOLOR
      pop eax
-     call WriteChar                ;// Desenha a Escada
-     mov eax, black + (gray * 16)  ;// Volta para a cor padrão
+     jmp Default
+
+Bau:
+     push eax                      ;// guarda 
+     mov eax, yellow + (gray * 16)  ;// Seleciona o branco  
      call SETTEXTCOLOR
-     jmp DefLoop
+     pop eax
+     jmp Default
 
 DefLoop:          ;// Continua os loops padrão
      inc ebx   
@@ -543,10 +604,10 @@ GeraMapa PROC USES eax ebx ecx edx esi
 ;// ------------------------- Reseta mapa e variáveis
      call ResetMapa
      mov emptyCells, 0
-;// ------------------------- Randomiza a meta de células limpas - entre 620 e 870 (aprox. 40 a 55 % do mapa)
+;// ------------------------- Randomiza a meta de células limpas - entre 620 e 950 (aprox. 40 a 60 % do mapa)
      mov eax, 451
      call RandomRange
-     add eax, 420
+     add eax, 500
      mov emptyGoal, ax 
 
 ;// ------------------------- Define uma posição inicial aleatória NO MEIO DO MAPA e salva em pos
@@ -688,8 +749,37 @@ Fim:
      mov bl, HeroiChar
      mov [esi + eax], bl
 
+     call InsertBaus
+
      ret
 GeraMapa ENDP
+
+;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: InsertBaus
+;// -------------------------------------------------------------------------
+;//	OBJETIVO: Insere os baús no mapa
+;//  PARÂMETROS: Não Possui
+;//  RETORNO: Não Possui
+;// -------------------------------------------------------------------------
+InsertBaus PROC
+     mov esi, OFFSET Map
+     mov ecx, 2
+     mov bl, VazioChar
+
+random:
+     mov eax, 1561
+     call RandomRange
+     mov dl, [esi+eax]
+     cmp dl, bl
+     jne random
+
+addBau:
+     mov dl, BauChar
+     mov [esi+eax], dl
+     loop random
+
+     ret
+InsertBaus ENDP
 
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: mainGame
@@ -701,7 +791,10 @@ GeraMapa ENDP
 MainGame PROC
      
 InitAll:
+     ;// Reseta variáveis
      mov Level, 1
+     mov Health, 10
+     mov Gold, 0
 
 InitLevel:
      call LimpaTela;// Limpa a tela
@@ -766,11 +859,8 @@ KeyUp:
      mov bl, vazioChar
      cmp[esi + eax], bl
      je MovUp
-     ;// Colisão com escada
-     mov bl, EscadaChar
-     cmp[esi + eax], bl
-     je colisaoEscada
-     ;// -------------------------- INSERIR COLISÕES
+     ;// Outras colisões
+     jmp colisao
 
 KeyDown:
      mov ax, posHeroi
@@ -787,11 +877,7 @@ KeyDown:
      mov bl, vazioChar
      cmp[esi + eax], bl
      je MovDown
-     ;// Colisão com escada
-     mov bl, EscadaChar
-     cmp[esi + eax], bl
-     je colisaoEscada
-     ;// -------------------------- INSERIR COLISÕES
+     jmp colisao
 
 KeyLeft:
      mov ax, PosHeroi
@@ -810,11 +896,7 @@ KeyLeft:
      mov bl, vazioChar
      cmp [esi + eax], bl
      je MovLeft
-     ;// Colisão com escada
-     mov bl, EscadaChar
-     cmp[esi + eax], bl
-     je colisaoEscada
-     ;// -------------------------- INSERIR COLISÕES
+     jmp colisao
 
 KeyRight:
      mov ax, PosHeroi
@@ -834,10 +916,17 @@ KeyRight:
      mov bl, vazioChar
      cmp[esi + eax], bl
      je MovRight
+     jmp colisao
+
+Colisao:
      ;// Colisão com escada
      mov bl, EscadaChar
      cmp[esi + eax], bl
      je colisaoEscada
+     ;// Colisão com bau
+     mov bl, BauChar
+     cmp[esi + eax], bl
+     je colisaoBau
      ;// -------------------------- INSERIR COLISÕES
 
 MovUp:
@@ -880,6 +969,33 @@ colisaoEscada:
      mov inStairs, 1
      jmp EndInput
 
+colisaoBau:
+     mov bl, VazioChar
+     mov [esi+eax], bl ;// Limpa a posição do bau
+     mov eax, 2
+     call RandomRange
+     ;// Adiciona Ouro
+     cmp eax, 0
+     je addGold
+     ;// Adiciona vida
+     cmp eax, 1
+     je addHealth    
+
+addGold:
+     mov eax, 3
+     call RandomRange
+     inc eax
+     mul Level
+     add Gold, ax
+     jmp EndInput
+
+addHealth:
+     mov al, Level
+     call RandomRange
+     inc eax
+     add eax, dword PTR Level
+     add Health, ax
+     jmp EndInput
 
 EndInput:     
      ret

@@ -24,10 +24,10 @@ yMax BYTE ROWS      ;// númer maximo de linhas
 ;// -------------------------------------------------------------------------
 Map BYTE MAPCOLS*MAPROWS Dup(?)	;// vetor de (colunas*linhas) posições. 
 posHeroi WORD 0						;// Posição atual do heroi
-HeroiChar BYTE 'O'
+HeroiChar BYTE 233
 posEscada WORD 0
-EscadaChar BYTE 'H'
-paredeChar BYTE '#'
+EscadaChar BYTE 240
+paredeChar BYTE 178
 vazioChar  BYTE ' '
 
 ;// -------------------------------------------------------------------------
@@ -36,6 +36,8 @@ vazioChar  BYTE ' '
 Level BYTE 0   ;// Nível atual
 inStairs DB 0  ;// Indica se o jogador se encontra na escada
 strLevel DB 'LEVEL',0
+health BYTE 10
+
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: GERAÇÃO DE MAPAS
@@ -334,13 +336,21 @@ drawBordas PROC uses eax ecx edx
      call SetTextColor
 
      ;// -------------------- Imprime a borda superior do mapa
-     movzx ecx, xMax            
-     mov al, paredeChar
+     mov al, 201
+     call WriteChar
+
+     movzx ecx, xMax
+     sub ecx, 2
+     mov al, 205
 L1:
      call WriteChar
      loop L1
-     
+
+     mov al, 187
+     call WriteChar
+
      ;// ------------------- Imprime as bordas laterais do mapa
+     mov al, 186
      movzx ecx, yMax                  
      sub ecx, 4
      mov dh, 1
@@ -360,47 +370,71 @@ L2:
      mov dh, yMax
      sub dh, 4
      call GotoXY
-     movzx ecx, xMax           
+     
+     mov al, 200
+     call WriteChar
+
+     movzx ecx, xMax  
+     sub ecx, 2
+     mov al, 205
+
 L3:
      call WriteChar
      loop L3
+
+     mov al, 188
+     call WriteChar
 
      mov eax, red + (black * 16)
      call SetTextColor
 
 
      ;// --------------------Imprime a borda superior do status
-     mov al, '='
+     mov al, 201
      mov dl, 0
      mov dh, yMax
      sub dh, 3
      call GotoXY
+     call WriteChar
      movzx ecx, xMax
+     sub ecx, 2
+     mov al, 207
 L4:
      call WriteChar
      loop L4
 
+     mov al, 187
+     call WriteChar
+
      ;// ------------------Imprime a borda de baixo do status
+     mov al, 200
      mov dl, 0
      mov dh, yMax
      call GotoXY
+     call writeChar
      movzx ecx, xMax
+     sub ecx, 2
+     mov al, 209
 L5:
      call WriteChar
      loop L5
+          
+     mov al, 188
+     call WriteChar
      
      ;// ------------------ Imprime as laterais do status
-     mov al, 'I'
      mov ecx, 2
      mov dh, yMax
      sub dh, 2
 L6:
      mov dl, 0
      call GotoXY
+     mov al, 182
      call WriteChar
      mov dl, xMax
      dec dl
      call GotoXY
+     mov al, 199
      call WriteChar
      inc dh
      loop L6
@@ -543,10 +577,10 @@ GeraMapa PROC USES eax ebx ecx edx esi
 ;// ------------------------- Reseta mapa e variáveis
      call ResetMapa
      mov emptyCells, 0
-;// ------------------------- Randomiza a meta de células limpas - entre 620 e 870 (aprox. 40 a 55 % do mapa)
+;// ------------------------- Randomiza a meta de células limpas - entre 620 e 950 (aprox. 40 a 60 % do mapa)
      mov eax, 451
      call RandomRange
-     add eax, 420
+     add eax, 500
      mov emptyGoal, ax 
 
 ;// ------------------------- Define uma posição inicial aleatória NO MEIO DO MAPA e salva em pos

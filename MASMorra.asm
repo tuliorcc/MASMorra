@@ -30,6 +30,7 @@ EscadaChar BYTE 240
 paredeChar BYTE 178
 vazioChar  BYTE ' '
 bauChar BYTE 254
+MonstroChar BYTE 38
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: CONTROLE E EXIBIÇÃO DE VARIÁVEIS DO JOGO
@@ -525,6 +526,7 @@ L2:
      je Escada
      cmp al, BauChar
      je Bau
+	cmp al, MonstroChar
      push eax
      mov eax, black + (gray * 16);// Volta para a cor padrão
      call SETTEXTCOLOR
@@ -550,6 +552,13 @@ Escada:
 Bau:
      push eax                      ;// guarda 
      mov eax, yellow + (gray * 16)  ;// Seleciona o branco  
+     call SETTEXTCOLOR
+     pop eax
+     jmp Default
+
+Montro:
+     push eax                      ;// guarda 
+     mov eax, red + (gray * 16)  ;// Seleciona o branco  
      call SETTEXTCOLOR
      pop eax
      jmp Default
@@ -750,6 +759,7 @@ Fim:
      mov [esi + eax], bl
 
      call InsertBaus
+	call InsertMonstros
 
      ret
 GeraMapa ENDP
@@ -780,6 +790,33 @@ addBau:
 
      ret
 InsertBaus ENDP
+
+;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: InsertMonstros
+;// -------------------------------------------------------------------------
+;//	OBJETIVO: Insere os monstros no mapa
+;//  PARÂMETROS: Não Possui
+;//  RETORNO: Não Possui
+;// -------------------------------------------------------------------------
+InsertMonstros PROC
+     mov esi, OFFSET Map
+     mov ecx, 2
+     mov bl, VazioChar
+
+random:
+     mov eax, 1561
+     call RandomRange
+     mov dl, [esi+eax]
+     cmp dl, bl
+     jne random
+
+addMonstro:
+     mov dl, MonstroChar
+     mov [esi+eax], dl
+     loop random
+
+     ret
+InsertMonstros ENDP
 
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: mainGame
@@ -927,6 +964,11 @@ Colisao:
      mov bl, BauChar
      cmp[esi + eax], bl
      je colisaoBau
+	;// Colisão com monstro
+     mov bl, MonstroChar
+     cmp[esi + eax], bl
+     je colisaoMonstro
+	
      ;// -------------------------- INSERIR COLISÕES
 
 MovUp:
@@ -979,8 +1021,16 @@ colisaoBau:
      je addGold
      ;// Adiciona vida
      cmp eax, 1
-     je addHealth    
+     je addHealth
 
+colisaoMonstro:
+     mov bl, VazioChar
+     mov eax, 2
+	call RandomRange
+     ;// Diminui vida
+     cmp eax, 0
+     je subHealth
+     
 addGold:
      mov eax, 3
      call RandomRange
@@ -995,6 +1045,14 @@ addHealth:
      inc eax
      add eax, dword PTR Level
      add Health, ax
+     jmp EndInput
+
+subHealth:
+     mov al, Level
+     call RandomRange
+     inc eax
+     add eax, dword PTR Level
+     sub Health, ax
      jmp EndInput
 
 EndInput:     

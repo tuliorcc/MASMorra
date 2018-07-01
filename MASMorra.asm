@@ -35,9 +35,13 @@ vazioChar  BYTE ' '
 ;// -------------------------------------------------------------------------
 Level BYTE 0   ;// Nível atual
 inStairs DB 0  ;// Indica se o jogador se encontra na escada
-strLevel DB 'LEVEL',0
-health BYTE 10
-
+strLevel DB 'LEVEL: ',0
+Health BYTE 10
+strHealth DB 'HEALTH: ',0
+Attack BYTE 2
+strAttack DB 'ATTACK: ',0
+Gold BYTE 0
+strGold DB 'GOLD: ',0
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: GERAÇÃO DE MAPAS
@@ -459,17 +463,32 @@ drawStatus PROC uses eax edx
      call SetTextColor
 
      ;// ---- LEVEL
-     mov dh, 23
+     mov dh, 23     ;// move para a posição
      mov dl, 5
      call GotoXY
      mov edx, OFFSET strLevel
      call WriteString
-     mov dh, 24
-     mov dl, 7
-     call GotoXY
      mov al, Level
      call WriteDec
      
+     ;// ---- HEALTH
+     mov dh, 23     ;// move para a posição
+     mov dl, 25
+     call GotoXY
+     mov edx, OFFSET strHealth
+     call WriteString
+     mov al, Health
+     call WriteDec
+
+     ;// ---- GOLD
+     mov dh, 23     ;// move para a posição
+     mov dl, 45
+     call GotoXY
+     mov edx, OFFSET strGold
+     call WriteString
+     mov al, Gold
+     call WriteDec
+
      call HideCursor
      ret
 drawStatus ENDP
@@ -735,7 +754,10 @@ GeraMapa ENDP
 MainGame PROC
      
 InitAll:
+     ;// Reseta variáveis
      mov Level, 1
+     mov Health, 10
+     mov Gold, 0
 
 InitLevel:
      call LimpaTela;// Limpa a tela

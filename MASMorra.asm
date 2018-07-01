@@ -29,6 +29,7 @@ posEscada WORD 0
 EscadaChar BYTE 240
 paredeChar BYTE 178
 vazioChar  BYTE ' '
+bauChar BYTE 254
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: CONTROLE E EXIBIÇÃO DE VARIÁVEIS DO JOGO
@@ -36,11 +37,11 @@ vazioChar  BYTE ' '
 Level BYTE 0   ;// Nível atual
 inStairs DB 0  ;// Indica se o jogador se encontra na escada
 strLevel DB 'LEVEL: ',0
-Health BYTE 10
+Health WORD 10
 strHealth DB 'HEALTH: ',0
 Attack BYTE 2
 strAttack DB 'ATTACK: ',0
-Gold BYTE 0
+Gold WORD 0
 strGold DB 'GOLD: ',0
 
 ;// -------------------------------------------------------------------------
@@ -477,7 +478,7 @@ drawStatus PROC uses eax edx
      call GotoXY
      mov edx, OFFSET strHealth
      call WriteString
-     mov al, Health
+     mov ax, Health
      call WriteDec
 
      ;// ---- GOLD
@@ -486,7 +487,7 @@ drawStatus PROC uses eax edx
      call GotoXY
      mov edx, OFFSET strGold
      call WriteString
-     mov al, Gold
+     mov ax, Gold
      call WriteDec
 
      call HideCursor
@@ -522,6 +523,12 @@ L2:
      je Hero
      cmp al, EscadaChar
      je Escada
+     cmp al, BauChar
+     je Bau
+     push eax
+     mov eax, black + (gray * 16);// Volta para a cor padrão
+     call SETTEXTCOLOR
+     pop eax
 Default:
      call WriteChar ;// Desenha padrão (parede ou nada)
      jmp DefLoop
@@ -531,20 +538,21 @@ Hero:
      mov eax, white + (gray * 16)  ;// Seleciona o branco  
      call SETTEXTCOLOR
      pop eax
-     call WriteChar                ;// Desenha o herói
-     mov eax, black + (gray * 16)  ;// Volta para a cor padrão
-     call SETTEXTCOLOR
-     jmp DefLoop
+     jmp Default
 
 Escada:
      push eax                      ;// guarda 
      mov eax, lightGreen + (gray * 16)  ;// Seleciona o branco  
      call SETTEXTCOLOR
      pop eax
-     call WriteChar                ;// Desenha a Escada
-     mov eax, black + (gray * 16)  ;// Volta para a cor padrão
+     jmp Default
+
+Bau:
+     push eax                      ;// guarda 
+     mov eax, yellow + (gray * 16)  ;// Seleciona o branco  
      call SETTEXTCOLOR
-     jmp DefLoop
+     pop eax
+     jmp Default
 
 DefLoop:          ;// Continua os loops padrão
      inc ebx   
@@ -741,8 +749,37 @@ Fim:
      mov bl, HeroiChar
      mov [esi + eax], bl
 
+     call InsertBaus
+
      ret
 GeraMapa ENDP
+
+;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: InsertBaus
+;// -------------------------------------------------------------------------
+;//	OBJETIVO: Insere os baús no mapa
+;//  PARÂMETROS: Não Possui
+;//  RETORNO: Não Possui
+;// -------------------------------------------------------------------------
+InsertBaus PROC
+     mov esi, OFFSET Map
+     mov ecx, 2
+     mov bl, VazioChar
+
+random:
+     mov eax, 1561
+     call RandomRange
+     mov dl, [esi+eax]
+     cmp dl, bl
+     jne random
+
+addBau:
+     mov dl, BauChar
+     mov [esi+eax], dl
+     loop random
+
+     ret
+InsertBaus ENDP
 
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: mainGame
@@ -822,11 +859,8 @@ KeyUp:
      mov bl, vazioChar
      cmp[esi + eax], bl
      je MovUp
-     ;// Colisão com escada
-     mov bl, EscadaChar
-     cmp[esi + eax], bl
-     je colisaoEscada
-     ;// -------------------------- INSERIR COLISÕES
+     ;// Outras colisões
+     jmp colisao
 
 KeyDown:
      mov ax, posHeroi
@@ -843,11 +877,7 @@ KeyDown:
      mov bl, vazioChar
      cmp[esi + eax], bl
      je MovDown
-     ;// Colisão com escada
-     mov bl, EscadaChar
-     cmp[esi + eax], bl
-     je colisaoEscada
-     ;// -------------------------- INSERIR COLISÕES
+     jmp colisao
 
 KeyLeft:
      mov ax, PosHeroi
@@ -866,11 +896,7 @@ KeyLeft:
      mov bl, vazioChar
      cmp [esi + eax], bl
      je MovLeft
-     ;// Colisão com escada
-     mov bl, EscadaChar
-     cmp[esi + eax], bl
-     je colisaoEscada
-     ;// -------------------------- INSERIR COLISÕES
+     jmp colisao
 
 KeyRight:
      mov ax, PosHeroi
@@ -890,10 +916,17 @@ KeyRight:
      mov bl, vazioChar
      cmp[esi + eax], bl
      je MovRight
+     jmp colisao
+
+Colisao:
      ;// Colisão com escada
      mov bl, EscadaChar
      cmp[esi + eax], bl
      je colisaoEscada
+     ;// Colisão com bau
+     mov bl, BauChar
+     cmp[esi + eax], bl
+     je colisaoBau
      ;// -------------------------- INSERIR COLISÕES
 
 MovUp:
@@ -936,6 +969,33 @@ colisaoEscada:
      mov inStairs, 1
      jmp EndInput
 
+colisaoBau:
+     mov bl, VazioChar
+     mov [esi+eax], bl ;// Limpa a posição do bau
+     mov eax, 2
+     call RandomRange
+     ;// Adiciona Ouro
+     cmp eax, 0
+     je addGold
+     ;// Adiciona vida
+     cmp eax, 1
+     je addHealth    
+
+addGold:
+     mov eax, 3
+     call RandomRange
+     inc eax
+     mul Level
+     add Gold, ax
+     jmp EndInput
+
+addHealth:
+     mov al, Level
+     call RandomRange
+     inc eax
+     add eax, dword PTR Level
+     add Health, ax
+     jmp EndInput
 
 EndInput:     
      ret

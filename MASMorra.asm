@@ -811,6 +811,9 @@ InsertBaus ENDP
 InsertMonstros PROC
      mov esi, OFFSET Map
      mov ecx, 5
+     mov eax, 15
+     call RandomRange
+     add ecx, eax
      mov bl, VazioChar
 
 random:

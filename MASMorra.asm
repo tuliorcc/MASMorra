@@ -44,6 +44,7 @@ Attack BYTE 2
 strAttack DB 'ATTACK: ',0
 Gold WORD 0
 strGold DB 'GOLD: ',0
+isDead DB 0
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: GERAÇÃO DE MAPAS
@@ -845,6 +846,7 @@ InitAll:
      mov Level, 1
      mov Health, 10
      mov Gold, 0
+     mov isDead, 0
 
 InitLevel:
      call LimpaTela;// Limpa a tela
@@ -858,13 +860,17 @@ gameloop:
      call PlayerMove
      cmp inStairs, 0
      jne NextLevel
+     cmp isDead, 0
+     jne EndGame
      jmp gameloop
 
 NextLevel:
      mov inStairs, 0
      inc Level
      jmp InitLevel
-     
+ 
+EndGame:
+
      ret
 MainGame ENDP
 
@@ -1040,11 +1046,13 @@ colisaoMonstro:
      cmp Health, bx   ;// compara a vida atual com o dano (dano=level)
      jbe Fatal
      sub Health, bx
+     add Gold, bx
      mov bl, VazioChar
      mov [esi+eax], bl ;// Remove o monstro
      jmp EndInput
 fatal:
      mov Health, 0
+     mov isDead, 1
      jmp EndInput
 
 addGold:

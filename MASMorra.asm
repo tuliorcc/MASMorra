@@ -464,6 +464,16 @@ drawStatus PROC uses eax edx
      mov eax, white+(black*16)
      call SetTextColor
 
+     mov ecx, 78
+     mov dh, 23
+     mov dl, 1
+     call GotoXY
+     mov al, VazioChar
+L1:  
+     call WriteChar
+     loop L1
+
+
      ;// ---- LEVEL
      mov dh, 23     ;// move para a posição
      mov dl, 5

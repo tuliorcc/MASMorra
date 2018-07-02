@@ -6,14 +6,25 @@ PlaySound PROTO, pszSound : PTR BYTE, hmod : DWORD, fdwSound : DWORD
 ;// -------------------------------------------------------------------------
 ;//  DEFINIÇÃO DE CONSTANTES
 ;// -------------------------------------------------------------------------
-COLS	= 80			;// Colunas do jogo
-ROWS	= 25			;// Linhas do jogo
-MAPCOLS = (COLS - 2)	;// Colunas do mapa
-MAPROWS = (ROWS - 5)	;// Linhas do mapa
-MENUQNT = 5				;// Quantas opções tem o menu
+MENUQNT = 4				;// Quantas opções tem o menu
+MAXLEVEL = 20			;// Nível máximo
 
 ;// -------------------------------------------------------------------------
-;//  CONSTANTES: PLAYSOUND
+;//  CONSTANTES: MAPA, OBJETOS E PERSONAGENS
+;// -------------------------------------------------------------------------
+COLS = 80				;// Colunas do jogo
+ROWS = 25				;// Linhas do jogo
+MAPCOLS = (COLS - 2)	;// Colunas do mapa
+MAPROWS = (ROWS - 5)	;// Linhas do mapa
+HEROICHAR = 143			;// Caractere do herói
+ESCADACHAR = 35		;// Caractere das escadas
+PAREDECHAR = 178		;// Caractere das paredes
+VAZIOCHAR  = ' '		;// Caractere vazio
+BAUCHAR = 254			;// Caractere dos baús
+MONSTROCHAR = 38		;// Caractere dos monstros
+
+;// -------------------------------------------------------------------------
+;//  CONSTANTES: FLAGS DO PLAYSOUND
 ;// -------------------------------------------------------------------------
 SND_FILENAME  = 20000h
 SND_ASYNC	  = 00001h
@@ -27,15 +38,14 @@ SND_LOOP	  = 00008h
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: ÁUDIOS
 ;// -------------------------------------------------------------------------
-auGameOver	BYTE 'game_over.wav', 0
-auClick		BYTE 'click.wav', 0
-auCave		BYTE 'cave.wav', 0
-auEvil1		BYTE 'evil_laugh1.wav', 0
-auEvil2		BYTE 'evil_laugh2.wav', 0
-auHurt1		BYTE 'hurt1.wav', 0
-auHurt2		BYTE 'hurt2.wav', 0
-auPunch		BYTE 'punch.wav', 0
-auWS		BYTE 'wscream.wav', 0
+auClick		BYTE 'audio/click.wav', 0
+auEvil		BYTE 'audio/evil.wav', 0
+auHurt		BYTE 'audio/hurt.wav', 0
+auPunch		BYTE 'audio/punch.wav', 0
+auDoor		BYTE 'audio/door.wav', 0
+auTada		BYTE 'audio/tada.wav', 0
+auCoin		BYTE 'audio/coin.wav', 0
+auPotion	BYTE 'audio/potion.wav', 0
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: TELA
@@ -47,20 +57,19 @@ yMax BYTE ROWS      ;// númer maximo de linhas
 ;//  VARIÁVEIS: CONTROLE E EXIBIÇÃO DO MAPA
 ;// -------------------------------------------------------------------------
 Map BYTE MAPCOLS*MAPROWS Dup(?)	;// vetor de (colunas*linhas) posições. 
-posHeroi WORD 0						;// Posição atual do heroi
-HeroiChar BYTE 233
-posEscada WORD 0
-EscadaChar BYTE 240
-paredeChar BYTE 178
-vazioChar  BYTE ' '
-bauChar BYTE 254
-MonstroChar BYTE 38
+posHeroi WORD 0					;// Posição atual do heroi
+posEscada WORD 0				;// Posição atual da escada
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: CONTROLE E EXIBIÇÃO DE VARIÁVEIS DO JOGO
 ;// -------------------------------------------------------------------------
-Level BYTE 0   ;// Nível atual
-inStairs DB 0  ;// Indica se o jogador se encontra na escada
+Level BYTE 0				;// Nível atual
+inStairs DB 0				;// Indica se o jogador se encontra na escada
+Abates WORD 0				;// Monstros abatidos
+Movimentos WORD 0			;// Movimentos (passos dados)
+BausCnt WORD 0				;// Baús abertos
+HealthConf WORD 10			;// Configuração: Vida Inicial
+AudioConf BYTE 1			;// Configuração: Efeitos Sonoros
 strLevel DB 'LEVEL: ',0
 Health WORD 10
 strHealth DB 'HEALTH: ',0
@@ -69,8 +78,7 @@ strAttack DB 'ATTACK: ',0
 Gold WORD 0
 strGold DB 'GOLD: ',0
 isDead DB 0
-PosMonstro WORD 0   ;// Usado para a movimentação dos monstros
-maxLevel BYTE 20    ;// nivel maximo
+PosMonstro WORD 0			;// Usado para a movimentação dos monstros
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: GERAÇÃO DE MAPAS
@@ -89,7 +97,7 @@ StdOut HANDLE ?
 ctitle DB 'MASMorra', 0 ;// Título da janela do terminal
 
 ;// -------------------------------------------------------------------------
-;//  VARIÁVEIS: TELAS DO MENU
+;//  VARIÁVEIS: TELAS DO JOGO
 ;// -------------------------------------------------------------------------
 
 ;// -------------------------------------------------------------------------
@@ -103,51 +111,36 @@ telaMenu	DB 13, 10
 			DB '                         ____________________ ', 13, 10
 			DB '                       / \                   \ ', 13, 10
 			DB '                      |  \|    NOVO JOGO     |', 13, 10
-			DB '                       \_||    CONQUISTAS    |', 13, 10
-			DB '                          |    AJUDA         |', 13, 10
+			DB '                       \_||    AJUDA         |', 13, 10
 			DB '                          |    CONFIGURACOES |', 13, 10
 			DB '                          |    SAIR          |', 13, 10
 			DB '                          |  ________________|__', 13, 10
-			DB '                          \_/__________________/', 13, 10, 0
-
-;// -------------------------------------------------------------------------
-;//  TELAS DO MENU: CONQUISTAS
-;// -------------------------------------------------------------------------
-telaConqs	DB 32, 201, 77 DUP(205), 187, 13, 10
-			DB 32, 186, '                                  CONQUISTAS                                 ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablabla.                                                            ', 186, 13, 10
-			DB 32, 186, '                                                                             ', 186, 13, 10
-			DB 32, 186, '                                                                             ', 186, 13, 10
-			DB 32, 186, '                                                                             ', 186, 13, 10
-			DB 32, 186, '                                                                             ', 186, 13, 10
-			DB 32, 186, '                                                                             ', 186, 13, 10
-			DB 32, 186, '                    Pressione qualquer tecla para voltar                     ', 186, 13, 10
-			DB 32, 200, 77 DUP(205), 188, 13, 10, 0
+			DB '                          \_/__________________/', 13, 10, 13, 10, 13, 10
+			DB '                       Utilize as setas do teclado', 13, 10
+			DB '                          e Enter para confirmar', 0
 
 ;// -------------------------------------------------------------------------
 ;//  TELAS DO MENU: AJUDA
 ;// -------------------------------------------------------------------------
 telaAjuda	DB 32, 201, 77 DUP(205), 187, 13, 10
 			DB 32, 186, '                                    AJUDA                                    ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablabla.                                                            ', 186, 13, 10
+			DB 32, 186, '                                 -----------                                 ', 186, 13, 10
+			DB 32, 186, '   MASMorra e um jogo de exploracao e sobrevivencia. Tente chegar ao final.  ', 186, 13, 10
+			DB 32, 186, '            ___                                                              ', 186, 13, 10
+			DB 32, 186, '        ___/_^_\___     - Utilize as setas do teclado para movimentar        ', 186, 13, 10
+			DB 32, 186, '       /_<_|_v_|_>_\      seu heroi (',HEROICHAR,'), coletar tesouros e atacar.          ', 186, 13, 10
+			DB 32, 186, '      /____|___|____\                                                        ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '     - Monstros (', MONSTROCHAR, ') tem dano relativo ao nivel atual e concedem Gold.        ', 186, 13, 10
+			DB 32, 186, '     - Baus de Tesouro (', BAUCHAR, ') concedem Gold ou Vida.                            ', 186, 13, 10
+			DB 32, 186, '     - Encontre a Saida (', ESCADACHAR, ') em cada nivel para avancar.                      ', 186, 13, 10
 			DB 32, 186, '                                                                             ', 186, 13, 10
 			DB 32, 186, ' Recursos utilizados:                                                        ', 186, 13, 10
-			DB 32, 186, '   Biblioteca Irvine (http://www.asmirvine.com)                              ', 186, 13, 10
+			DB 32, 186, '   - Biblioteca Irvine (http://www.asmirvine.com)                            ', 186, 13, 10
+			DB 32, 186, '   - Audios de freesound.org (http://freesound.org)                          ', 186, 13, 10
 			DB 32, 186, '                                                                             ', 186, 13, 10
 			DB 32, 186, '                                                                             ', 186, 13, 10
-			DB 32, 186, '                    Pressione qualquer tecla para voltar                     ', 186, 13, 10
+			DB 32, 186, '                Pressione qualquer tecla para voltar ao menu                 ', 186, 13, 10
 			DB 32, 200, 77 DUP(205), 188, 13, 10, 0
 
 ;// -------------------------------------------------------------------------
@@ -155,21 +148,70 @@ telaAjuda	DB 32, 201, 77 DUP(205), 187, 13, 10
 ;// -------------------------------------------------------------------------
 telaConfig	DB 32, 201, 77 DUP(205), 187, 13, 10
 			DB 32, 186, '                                 CONFIGURACOES                               ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablablablablablablablablablablablablablablablablablablablablablabla ', 186, 13, 10
-			DB 32, 186, ' blablablablabla.                                                            ', 186, 13, 10
+			DB 32, 186, '                               -----------------                             ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '               Efeitos Sonoros: [ ] Ativados | [ ] Desativados               ', 186, 13, 10
+	        DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '               Vida Inicial: [ ] 10 | [ ] 20 | [ ] 30                        ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '               Retornar ao menu principal                                    ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                     Utilize as setas do teclado e Enter                     ', 186, 13, 10
+			DB 32, 186, '                        para alterar as configuracoes                        ', 186, 13, 10
 			DB 32, 186, '                                                                             ', 186, 13, 10
 			DB 32, 186, '                                                                             ', 186, 13, 10
 			DB 32, 186, '                                                                             ', 186, 13, 10
 			DB 32, 186, '                                                                             ', 186, 13, 10
-			DB 32, 186, '                                                                             ', 186, 13, 10
-			DB 32, 186, '                    Pressione qualquer tecla para voltar                     ', 186, 13, 10
 			DB 32, 200, 77 DUP(205), 188, 13, 10, 0
 
+;// -------------------------------------------------------------------------
+;//  TELAS DE FINAL DE PARTIDA: DERROTA
+;// -------------------------------------------------------------------------
+telaDerrota	DB 32, 201, 77 DUP(205), 187, 13, 10              
+			DB 32, 186, '                ____    ____ ____  ____    ___   ______  ___                 ', 186, 13, 10
+			DB 32, 186, '                || \\  ||    || \\ || \\  // \\  | || | // \\                ', 186, 13, 10
+			DB 32, 186, '                ||  )) ||==  ||_// ||_// ((   ))   ||   ||=||                ', 186, 13, 10
+			DB 32, 186, '                ||_//  ||___ || \\ || \\  \\_//    ||   || ||                ', 186, 13, 10
+			DB 32, 186, '               -----------------------------------------------               ', 186, 13, 10
+			DB 32, 186, '                     Voce foi derrotado. Tente novamente.                    ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                        Nivel alcancado:                                     ', 186, 13, 10
+			DB 32, 186, '                          Gold recebido:                                     ', 186, 13, 10
+			DB 32, 186, '                      Monstros abatidos:                                     ', 186, 13, 10
+			DB 32, 186, '                             Movimentos:                                     ', 186, 13, 10
+			DB 32, 186, '                           Baus abertos:                                     ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                Pressione qualquer tecla para voltar ao menu                 ', 186, 13, 10
+			DB 32, 200, 77 DUP(205), 188, 13, 10, 0
+
+;// -------------------------------------------------------------------------
+;//  TELAS DE FINAL DE PARTIDA: VITÓRIA
+;// -------------------------------------------------------------------------
+telaVitoria	DB 32, 201, 77 DUP(205), 187, 13, 10              
+			DB 32, 186, '                   __ __ __ ______   ___   ____  __  ___                     ', 186, 13, 10
+			DB 32, 186, '                   || || || | || |  // \\  || \\ || // \\                    ', 186, 13, 10
+			DB 32, 186, '                   \\ // ||   ||   ((   )) ||_// || ||=||                    ', 186, 13, 10
+			DB 32, 186, '                    \V/  ||   ||    \\_//  || \\ || || ||                    ', 186, 13, 10
+			DB 32, 186, '                  -----------------------------------------                  ', 186, 13, 10
+			DB 32, 186, '                            Voce venceu! Parabens!                           ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                        Nivel alcancado:                                     ', 186, 13, 10
+			DB 32, 186, '                          Gold recebido:                                     ', 186, 13, 10
+			DB 32, 186, '                      Monstros abatidos:                                     ', 186, 13, 10
+			DB 32, 186, '                             Movimentos:                                     ', 186, 13, 10
+			DB 32, 186, '                           Baus abertos:                                     ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                                                                             ', 186, 13, 10
+			DB 32, 186, '                Pressione qualquer tecla para voltar ao menu                 ', 186, 13, 10
+			DB 32, 200, 77 DUP(205), 188, 13, 10, 0
 
 ;// -------------------------------------------------------------------------
 ;//  DEFINIÇÃO DE PROCEDIMENTOS
@@ -203,8 +245,6 @@ ShowMenu PROC
 	mov eax, yellow + (blue * 16)
 	call SetTextColor
 
-	mov esi, 0	;// Inicia o índice do menu na primeira opção
-
 	call LimpaTela
 
 	mov edx, OFFSET telaMenu ;// Imprime a tela inicial do menu
@@ -232,6 +272,15 @@ BAIXO :
 	mov ch, cl
 	inc ch
 	call ChangeMenuSel
+	push ecx
+	push eax
+	mov al, AudioConf
+	cmp al, 1
+	jne MUTE1
+	invoke PlaySound, offset auClick, NULL, SND_FILENAME or SND_NODEFAULT or SND_ASYNC
+MUTE1:
+	pop eax
+	pop ecx
 	jmp MENUL
 CIMA :
 	cmp cl, 0	;// Limitador mínimo
@@ -239,6 +288,15 @@ CIMA :
 	mov ch, cl
 	dec ch
 	call ChangeMenuSel
+	push ecx
+	push eax
+	mov al, AudioConf
+	cmp al, 1
+	jne MUTE2
+	invoke PlaySound, offset auClick, NULL, SND_FILENAME or SND_NODEFAULT or SND_ASYNC
+MUTE2:
+	pop eax
+	pop ecx
 	jmp MENUL
 ShowMenu ENDP
 
@@ -276,26 +334,17 @@ DoMenuSel PROC
 	cmp cl, 0
 	je opNovoJogo
 	cmp cl, 1
-	je opConquistas
-	cmp cl, 2
 	je opAjuda
-	cmp cl, 3
+	cmp cl, 2
 	je opConfig
 ;// SELEÇÃO DO MENU: Sair
 	call LimpaTela
 	invoke ExitProcess, 0
 ;// SELEÇÃO DO MENU: Novo Jogo
 opNovoJogo:
-          call MainGame
-          mov cl, 0
-          call ShowMenu
+        call MainGame
+        mov cl, 0
 		jmp MenuRetWait 
-;// SELEÇÃO DO MENU: Conquistas
-opConquistas:
-		call LimpaTela
-		mov edx, OFFSET telaConqs
-		call WriteString
-		jmp MenuRetWait
 ;// SELEÇÃO DO MENU: Ajuda
 opAjuda:
 		call LimpaTela
@@ -304,9 +353,9 @@ opAjuda:
 		jmp MenuRetWait
 ;// SELEÇÃO DO MENU: Configurações
 opConfig:
-		call LimpaTela
-		mov edx, OFFSET telaConfig
-		call WriteString
+		call showConfig
+		call ShowMenu	;// Retorna ao menu principal
+		ret
 ;// Para telas do menu que aguardam uma tecla para retornar
 MenuRetWait:
 		mov  eax, 50
@@ -316,6 +365,232 @@ MenuRetWait:
 		call ShowMenu   ;// Retorna ao menu principal
 		ret
 DoMenuSel ENDP
+
+;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: ShowConfig
+;// -------------------------------------------------------------------------
+;//	 OBJETIVO: Imprimir o menu de configurações e chamar o controle da seta seletora
+;//  PARÂMETROS: Não Possui
+;//  RETORNO: Não Possui
+;// -------------------------------------------------------------------------
+showConfig PROC USES eax ecx edx
+	mov eax, yellow + (blue * 16)
+	call SetTextColor
+
+	call LimpaTela
+
+	mov edx, OFFSET telaConfig	;// Imprime a tela inicial do menu de configurações
+	call WriteString
+
+	call UpdateConfigIndicator ;//Imprime os indicadores das configurações
+
+	mov cl, 2	;// Inicia o índice das configurações na opção de retorno
+
+	call ChangeConfigSel	;// Imprime a seta seletora do menu de configurações
+
+MENUL:
+	mov  eax, 50
+	call Delay
+	call ReadKey	;// Verifica se há uma tecla pressionada
+	jz MENUL
+	cmp ah, 48h	;// Seta para cima
+	je CIMA
+	cmp ah, 50h	;// Seta para baixo
+	je BAIXO
+	cmp ah, 1Ch	;// Enter
+	jne MENUL
+	call DoConfigSel
+	jmp MENUL
+BAIXO :
+	cmp cl, 2	;// Limitador máximo
+	je MENUL
+	mov ch, cl
+	inc ch
+	call ChangeConfigSel
+	push ecx
+	push eax
+	mov al, AudioConf
+	cmp al, 1
+	jne MUTE3
+	invoke PlaySound, offset auClick, NULL, SND_FILENAME or SND_NODEFAULT or SND_ASYNC
+MUTE3:
+	pop eax
+	pop ecx
+	jmp MENUL
+CIMA :
+	cmp cl, 0	;// Limitador mínimo
+	je MENUL
+	mov ch, cl
+	dec ch
+	call ChangeConfigSel
+	push ecx
+	push eax
+	mov al, AudioConf
+	cmp al, 1
+	jne MUTE4
+	invoke PlaySound, offset auClick, NULL, SND_FILENAME or SND_NODEFAULT or SND_ASYNC
+MUTE4:
+	pop eax
+	pop ecx
+	jmp MENUL
+showConfig ENDP
+
+;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: ChangeConfigSel
+;// -------------------------------------------------------------------------
+;//	 OBJETIVO: Imprimir a seta seletora do menu de configurações
+;//  PARÂMETROS:  CH - Nova Opção Selecionada
+;//  RETORNO: CL - Opção Selecionada
+;// -------------------------------------------------------------------------
+ChangeConfigSel PROC
+	mov dl, 15			;// pos X da seta
+	mov dh, 5			;// base do Y do menu(topo)
+	add dh, cl			;// pos Y da seta(atual) (2x)
+	add dh, cl
+	call Gotoxy
+	mov al, 32			;// ASCII: Espaço
+	call WriteChar		;// Limpa a seleção anterior
+	mov dh, 5			;// base do Y do menu(topo)
+	add dh, ch			;// pos Y da seta(nova) (2x)
+	add dh, ch
+	call Gotoxy
+	mov al, 175			;// ASCII: Seta
+	call WriteChar		;// Escreve o indicador do menu
+	mov cl, ch			;// Troca a opção atual
+	ret
+ChangeConfigSel ENDP
+
+;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: DoConfigSel
+;// -------------------------------------------------------------------------
+;//	 OBJETIVO: Verificar a opção selecionada no menu de configurações
+;//  PARÂMETROS:  CL - Opção Selecionada
+;//  RETORNO: Não Possui
+;// -------------------------------------------------------------------------
+DoConfigSel PROC
+	push ecx
+	push eax
+	mov al, AudioConf
+	cmp al, 1
+	jne MUTE5
+	invoke PlaySound, offset auClick, NULL, SND_FILENAME or SND_NODEFAULT or SND_ASYNC
+MUTE5:
+	pop eax
+	pop ecx
+	cmp cl, 0
+	je opAudio
+	cmp cl, 1
+	je opHealth
+	call ShowMenu	;// Retorna ao menu principal
+;// SELEÇÃO DO MENU: Efeitos Sonoros
+opAudio:
+	mov al, AudioConf
+	cmp al, 1
+	je AudioON
+	mov AudioConf, 1
+	call UpdateConfigIndicator
+	ret
+AudioON:
+	mov AudioConf, 0
+	call UpdateConfigIndicator
+	ret
+;// SELEÇÃO DO MENU: Vida Inicial
+opHealth:
+	mov ax, HealthConf
+	cmp ax, 10
+	je HP10
+	cmp ax, 20
+	je HP20
+HP30:
+	mov HealthConf, 10
+	call UpdateConfigIndicator
+	ret
+HP20:
+	mov HealthConf, 30
+	call UpdateConfigIndicator
+	ret
+HP10:
+	mov HealthConf, 20
+	call UpdateConfigIndicator
+	ret
+DoConfigSel ENDP
+
+;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: UpdateConfigIndicator
+;// -------------------------------------------------------------------------
+;//	 OBJETIVO: Verificar as configuraçoes atuais, alterando os indicadores do menu
+;//  PARÂMETROS:  Não Possui
+;//  RETORNO: Não Possui
+;// -------------------------------------------------------------------------
+UpdateConfigIndicator PROC
+;// Limpa todos os indicadores
+	mov dl, 35		;// pos X do indicador de Efeitos Sonoros 1
+	mov dh, 5		;// pos Y
+	call Gotoxy
+	mov al, 32		;// ASCII: Espaço
+	call WriteChar
+	mov dl, 50		;// pos X do indicador de Efeitos Sonoros 2
+	call Gotoxy
+	mov al, 32		;// ASCII: Espaço
+	call WriteChar
+	mov dl, 32		;// pos X do indicador de Vida Inicial 1
+	mov dh, 7		;// pos Y
+	call Gotoxy
+	mov al, 32		;// ASCII: Espaço 32
+	call WriteChar
+	mov dl, 41		;// pos X do indicador de Vida Inicial 2
+	call Gotoxy
+	mov al, 32		;// ASCII: Espaço
+	call WriteChar
+	mov dl, 50		;// pos X do indicador de Vida Inicial 3
+	call Gotoxy
+	mov al, 32		;// ASCII: Espaço
+	call WriteChar
+
+;// INDICADOR DA CONFIGURAÇÃO DE EFEITOS SONOROS
+	mov dh, 5				;// pos Y
+	mov al, AudioConf
+	cmp al, 1
+	je AudioON
+AudioOFF:
+	mov dl, 50
+	call Gotoxy
+	mov al, 254
+	call WriteChar
+	jmp HPIND
+AudioON:
+	mov dl, 35
+	call Gotoxy
+	mov al, 254
+	call WriteChar
+
+;// INDICADOR DA CONFIGURAÇÃO DE VIDA INICIAL
+HPIND:
+	mov dh, 7		;// pos Y
+	mov ax, HealthConf
+	cmp ax, 10
+	je HP10
+	cmp ax, 20
+	je HP20
+HP30:
+	mov dl, 50
+	call Gotoxy
+	mov al, 254
+	call WriteChar
+	ret
+HP20:
+	mov dl, 41
+	call Gotoxy
+	mov al, 254
+	call WriteChar
+	ret
+HP10:
+	mov dl, 32
+	call Gotoxy
+	mov al, 254
+	call WriteChar
+	ret
+UpdateConfigIndicator ENDP
 
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: LimpaTela
@@ -333,7 +608,7 @@ LimpaTela PROC USES eax ecx edx
 	call GOTOXY ;// Função Irvine : Configura o cursor para a linha dh e a coluna dl
 	movzx ecx, yMax ;// Inicializa o contador do loop com a quantidade de linhas
 	inc ecx
-	mov al, vazioChar
+	mov al, VAZIOCHAR
 
 LLP1 :
 	mov dl, 0
@@ -433,7 +708,7 @@ L3:
      call WriteChar
      movzx ecx, xMax
      sub ecx, 2
-     mov al, 207
+     mov al, 205
 L4:
      call WriteChar
      loop L4
@@ -449,7 +724,7 @@ L4:
      call writeChar
      movzx ecx, xMax
      sub ecx, 2
-     mov al, 209
+     mov al, 205
 L5:
      call WriteChar
      loop L5
@@ -464,12 +739,12 @@ L5:
 L6:
      mov dl, 0
      call GotoXY
-     mov al, 182
+     mov al, 186
      call WriteChar
      mov dl, xMax
      dec dl
      call GotoXY
-     mov al, 199
+     mov al, 186
      call WriteChar
      inc dh
      loop L6
@@ -497,7 +772,7 @@ drawStatus PROC uses eax edx
      mov dh, 23
      mov dl, 1
      call GotoXY
-     mov al, VazioChar
+     mov al, VAZIOCHAR
 L1:  
      call WriteChar
      loop L1
@@ -559,13 +834,13 @@ L1:
      call GOTOXY              ;// Função Irvine : Configura o cursor para a linha dh e a coluna dl
 L2:
      mov al, [esi + ebx]
-     cmp al, HeroiChar
+     cmp al, HEROICHAR
      je Hero
-     cmp al, EscadaChar
+     cmp al, ESCADACHAR
      je Escada
-     cmp al, BauChar
+     cmp al, BAUCHAR
      je Bau
-	cmp al, MonstroChar
+	cmp al, MONSTROCHAR
      je Monstro
      push eax
      mov eax, black + (gray * 16);// Volta para a cor padrão
@@ -625,7 +900,7 @@ PrintMapa ENDP
 ResetMapa PROC uses eax ecx esi
      mov ecx, 0
      mov esi, OFFSET Map
-     mov al, paredeChar
+     mov al, PAREDECHAR
 L1:
      mov [esi+ecx], al
      inc ecx
@@ -703,7 +978,7 @@ MNC:
      
      mov pos, ax;// salva a nova posição
 
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      cmp[esi + eax], bl
      je NowriteN
      inc emptyCells
@@ -728,7 +1003,7 @@ MEC:
      inc ax
      mov pos, ax  ;// salva a nova posição
 
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      cmp[esi + eax], bl
      je NowriteE
      inc emptyCells
@@ -750,7 +1025,7 @@ MSC:
 
      mov pos, ax     ;// salva a nova posição
 
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      cmp[esi + eax], bl
      je NowriteS
      inc emptyCells
@@ -774,7 +1049,7 @@ MWC :
      dec ax
      mov pos, ax    ;// salva a nova posição
 
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      cmp [esi + eax], bl
      je NowriteW
      inc emptyCells
@@ -789,12 +1064,12 @@ Fim:
      ;// -------- - Insere a Escada no mapa
      mov ax, pos
      mov posEscada, ax
-     mov bl, EscadaChar
+     mov bl, ESCADACHAR
      mov [esi+eax], bl
 
      ;// -------- - Insere Personagem no mapa
      mov ax, posHeroi
-     mov bl, HeroiChar
+     mov bl, HEROICHAR
      mov [esi + eax], bl
 
      call InsertBaus
@@ -813,7 +1088,7 @@ GeraMapa ENDP
 InsertBaus PROC
      mov esi, OFFSET Map
      mov ecx, 2
-     mov bl, VazioChar
+     mov bl, VAZIOCHAR
 
 random:
      mov eax, 1561
@@ -823,7 +1098,7 @@ random:
      jne random
 
 addBau:
-     mov dl, BauChar
+     mov dl, BAUCHAR
      mov [esi+eax], dl
      loop random
 
@@ -843,21 +1118,21 @@ InsertMonstros PROC
      mov eax, 15
      call RandomRange
      add ecx, eax
-     mov bl, VazioChar
+     mov bl, VAZIOCHAR
 
 random:
-     mov bl, VazioChar
+     mov bl, VAZIOCHAR
      mov eax, 1561
      call RandomRange
      mov dl, [esi+eax]
      cmp dl, bl
      jne random
-     mov bl, BauChar
+     mov bl, BAUCHAR
      cmp dl, bl
      je random
 
 addMonstro:
-     mov dl, MonstroChar
+     mov dl, MONSTROCHAR
      mov [esi+eax], dl
      loop random
 
@@ -876,12 +1151,13 @@ MainGame PROC uses ecx eax
 InitAll:
      ;// Reseta variáveis
      mov Level, 1
-     mov Health, 10
+	 mov ax, HealthConf
+     mov Health, ax
      mov Gold, 0
+	 mov Abates, 0
+	 mov Movimentos, 0
+	 mov BausCnt, 0
      mov isDead, 0
-
-;// Música de fundo do jogo
-	invoke PlaySound, offset auCave, NULL, SND_FILENAME or SND_ASYNC or SND_NODEFAULT or SND_LOOP
 
 InitLevel:
      call LimpaTela;// Limpa a tela
@@ -897,7 +1173,7 @@ gameloop:
      cmp inStairs, 0 ;// Verifica se o o jogador se encontra na escada
      jne NextLevel
      cmp isDead, 0  ;// Verifica se o jogador esta morto
-     jne EndGame
+     jne EndDead
      
      call PrintMapa
      mov eax, 50
@@ -907,15 +1183,75 @@ gameloop:
      jmp gameloop
 
 NextLevel:
+	 ;// Som de porta abrindo
+	push eax
+	mov al, AudioConf
+	cmp al, 1
+	jne MUTE6
+	invoke PlaySound, offset auDoor, NULL, SND_FILENAME or SND_NODEFAULT
+MUTE6:
+	pop eax
      mov inStairs, 0 
-     inc Level
-     mov al, MaxLevel
+     mov al, MAXLEVEL ;// Verifica se terminou o nível final
      cmp al, Level
      je EndGame
+     inc Level
      jmp InitLevel
- 
-EndGame:
 
+EndDead:
+	 ;// Som de derrota
+	push eax
+	mov al, AudioConf
+	cmp al, 1
+	jne MUTE7
+	invoke PlaySound, offset auEvil, NULL, SND_FILENAME or SND_NODEFAULT or SND_ASYNC
+MUTE7:
+	pop eax
+	 call LimpaTela
+	 mov edx, OFFSET telaDerrota
+	 call WriteString
+	 jmp FillPlacar
+EndGame:
+	 ;// Som de vitória
+	push eax
+	mov al, AudioConf
+	cmp al, 1
+	jne MUTE8
+	invoke PlaySound, offset auTada, NULL, SND_FILENAME or SND_NODEFAULT or SND_ASYNC
+MUTE8:
+	pop eax
+	 call LimpaTela
+	 mov edx, OFFSET telaVitoria
+	 call WriteString
+FillPlacar:
+	 mov eax, white+(black*16)
+     call SetTextColor
+	 mov dl, 43
+	 ;// ---- NIVEL ALCANÇADO
+     mov dh, 8     ;// move para a posição
+     call GotoXY
+     mov al, Level
+     call WriteDec
+	 ;// ---- GOLD RECEBIDO
+     mov dh, 9     ;// move para a posição
+     call GotoXY
+     mov ax, Gold
+     call WriteDec
+	 ;// ---- MONSTROS ABATIDOS
+     mov dh, 10     ;// move para a posição
+     call GotoXY
+     mov ax, Abates
+     call WriteDec
+	 ;// ---- MOVIMENTOS (PASSOS DADOS)
+     mov dh, 11     ;// move para a posição
+     call GotoXY
+     mov ax, Movimentos
+     call WriteDec
+	 ;// ---- BAÚS ABERTOS
+     mov dh, 12     ;// move para a posição
+     call GotoXY
+     mov ax, BausCnt
+     call WriteDec
      ret
 MainGame ENDP
 
@@ -930,7 +1266,7 @@ MoveMonstros PROC
      
      mov esi, OFFSET map
      mov ecx, 1559
-     mov bl, MonstroChar
+     mov bl, MONSTROCHAR
 
 Scan:
      cmp [esi+ecx], bl
@@ -949,7 +1285,7 @@ MoveMonstros ENDP
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: MonstroMoveCheck
 ;// -------------------------------------------------------------------------
-;//	 OBJETIVO: Lê a entrada do jogador e move o personagem
+;//	 OBJETIVO: Checagem de movimentação dos monstros
 ;//  PARÂMETROS: Não Possui
 ;//  RETORNO: Não Possui
 ;// -------------------------------------------------------------------------
@@ -978,11 +1314,11 @@ MonUp:
 
      ;// Checa se existe uma parede:
      sub eax, 78
-     mov bl, paredeChar
+     mov bl, PAREDECHAR
      cmp [esi + eax], bl
      je EndMov
      ;// Move caso válido
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      cmp[esi + eax], bl
      je MovUp
      ;// Outras colisões
@@ -996,11 +1332,11 @@ MonDown:
 
      ;// Checa se existe uma parede:
      add eax, 78
-     mov bl, paredeChar
+     mov bl, PAREDECHAR
      cmp[esi + eax], bl
      je EndMov
      ;// Move caso válido
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      cmp[esi + eax], bl
      je MovDown
      jmp colisao
@@ -1015,11 +1351,11 @@ MonLeft:
      mov ax, posMonstro
      ;// Checa se existe uma parede:
      dec ax
-     mov bl, paredeChar
+     mov bl, PAREDECHAR
      cmp [esi+eax], bl
      je EndMov
      ;// Move caso válido
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      cmp [esi + eax], bl
      je MovLeft
      jmp colisao
@@ -1035,75 +1371,83 @@ MonRight:
      mov ax, posMonstro
      ;// Checa se existe uma parede:
      inc ax
-     mov bl, paredeChar
+     mov bl, PAREDECHAR
      cmp[esi + eax], bl
      je EndMov
      ;// Move caso válido
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      cmp[esi + eax], bl
      je MovRight
      jmp colisao
 
 Colisao:
      ;// Colisão com escada
-     mov bl, EscadaChar
+     mov bl, ESCADACHAR
      cmp[esi + eax], bl
      jmp EndMov
      ;// Colisão com bau
-     mov bl, BauChar
+     mov bl, BAUCHAR
      cmp[esi + eax], bl
      jmp EndMov
 	;// Colisão com o Heroi
-     mov bl, HeroiChar
+     mov bl, HEROICHAR
      cmp[esi + eax], bl
      je colisaoHeroi
 	;// Colisão com monstro
-     mov bl, MonstroChar
+     mov bl, MONSTROCHAR
      cmp[esi + eax], bl
      jmp Dir   
 
 MovUp:
      sub PosMonstro, 78
      mov ax, PosMonstro
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      mov [esi + eax + 78], bl   ;// Limpa posição atual
-     mov bl, MonstroCHar
-     mov [esi + eax], bl ; // Adiciona o heroi na nova posição
-     sub ecx, 79
+     mov bl, MONSTROCHAR
+     mov [esi + eax], bl ; // Adiciona o monstro na nova posição
+     sub ecx, 78
      jmp EndMov
 
 MovDown :
      add PosMonstro, 78
      mov ax, PosMonstro
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      mov[esi + eax - 78], bl   ;// Limpa posição atual
-     mov bl, MonstroChar
-     mov[esi + eax], bl ; // Adiciona o heroi na nova posição
+     mov bl, MONSTROCHAR
+     mov[esi + eax], bl ; // Adiciona o monstro na nova posição
      jmp EndMov
 
 MovLeft :
      dec PosMonstro
      mov ax, PosMonstro
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      mov[esi + eax + 1], bl;// Limpa posição atual
-     mov bl, MonstroChar
-     mov[esi + eax], bl; // Adiciona o heroi na nova posição
+     mov bl, MONSTROCHAR
+     mov[esi + eax], bl; // Adiciona o monstro na nova posição
      dec ecx
      jmp EndMov
 
 MovRight :
      inc PosMonstro
      mov ax, PosMonstro
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      mov[esi + eax - 1], bl;// Limpa posição atual
-     mov bl, MonstroChar
-     mov[esi + eax], bl; // Adiciona o heroi na nova posição
+     mov bl, MONSTROCHAR
+     mov[esi + eax], bl; // Adiciona o monstro na nova posição
      jmp EndMov
 
 colisaoHeroi:
      movzx ebx, Level
      cmp Health, bx   ;// compara a vida atual com o dano (dano=level)
      jbe Fatal
+	 ;// Som de ferimento
+	push eax
+	mov al, AudioConf
+	cmp al, 1
+	jne MUTE9
+	invoke PlaySound, offset auHurt, NULL, SND_FILENAME or SND_NODEFAULT or SND_ASYNC
+MUTE9:
+	pop eax
      sub Health, bx ;// dá dano caso não seja fatal
      jmp EndMov
 
@@ -1153,11 +1497,12 @@ KeyUp:
 
      ;// Checa se existe uma parede:
      sub eax, 78
-     mov bl, paredeChar
+     mov bl, PAREDECHAR
      cmp [esi + eax], bl
      je KeyWait
      ;// Move caso válido
-     mov bl, vazioChar
+	 inc Movimentos
+     mov bl, VAZIOCHAR
      cmp[esi + eax], bl
      je MovUp
      ;// Outras colisões
@@ -1171,11 +1516,12 @@ KeyDown:
 
      ;// Checa se existe uma parede:
      add eax, 78
-     mov bl, paredeChar
+     mov bl, PAREDECHAR
      cmp[esi + eax], bl
      je KeyWait
      ;// Move caso válido
-     mov bl, vazioChar
+	 inc Movimentos
+     mov bl, VAZIOCHAR
      cmp[esi + eax], bl
      je MovDown
      jmp colisao
@@ -1190,11 +1536,12 @@ KeyLeft:
      mov ax, posHeroi
      ;// Checa se existe uma parede:
      dec ax
-     mov bl, paredeChar
+     mov bl, PAREDECHAR
      cmp [esi+eax], bl
      je KeyWait
      ;// Move caso válido
-     mov bl, vazioChar
+	 inc Movimentos
+     mov bl, VAZIOCHAR
      cmp [esi + eax], bl
      je MovLeft
      jmp colisao
@@ -1210,26 +1557,27 @@ KeyRight:
      mov ax, posHeroi
      ;// Checa se existe uma parede:
      inc ax
-     mov bl, paredeChar
+     mov bl, PAREDECHAR
      cmp[esi + eax], bl
      je KeyWait
      ;// Move caso válido
-     mov bl, vazioChar
+	 inc Movimentos
+     mov bl, VAZIOCHAR
      cmp[esi + eax], bl
      je MovRight
      jmp colisao
 
 Colisao:
      ;// Colisão com escada
-     mov bl, EscadaChar
+     mov bl, ESCADACHAR
      cmp[esi + eax], bl
      je colisaoEscada
      ;// Colisão com bau
-     mov bl, BauChar
+     mov bl, BAUCHAR
      cmp[esi + eax], bl
      je colisaoBau
 	;// Colisão com monstro
-     mov bl, MonstroChar
+     mov bl, MONSTROCHAR
      cmp[esi + eax], bl
      je colisaoMonstro
 	
@@ -1237,36 +1585,36 @@ Colisao:
 MovUp:
      sub posHeroi, 78
      mov ax, posHeroi
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      mov [esi + eax + 78], bl   ;// Limpa posição atual
-     mov bl, HeroiChar
+     mov bl, HEROICHAR
      mov [esi + eax], bl ; // Adiciona o heroi na nova posição
      jmp EndInput
 
 MovDown :
      add posHeroi, 78
      mov ax, posHeroi
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      mov[esi + eax - 78], bl   ;// Limpa posição atual
-     mov bl, HeroiChar
+     mov bl, HEROICHAR
      mov[esi + eax], bl ; // Adiciona o heroi na nova posição
      jmp EndInput
 
 MovLeft :
      dec posHeroi
      mov ax, posHeroi
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      mov[esi + eax + 1], bl;// Limpa posição atual
-     mov bl, HeroiChar
+     mov bl, HEROICHAR
      mov[esi + eax], bl; // Adiciona o heroi na nova posição
      jmp EndInput
 
 MovRight :
      inc posHeroi
      mov ax, posHeroi
-     mov bl, vazioChar
+     mov bl, VAZIOCHAR
      mov[esi + eax - 1], bl;// Limpa posição atual
-     mov bl, HeroiChar
+     mov bl, HEROICHAR
      mov[esi + eax], bl; // Adiciona o heroi na nova posição
      jmp EndInput
 
@@ -1275,8 +1623,9 @@ colisaoEscada:
      jmp EndInput
 
 colisaoBau:
-     mov bl, VazioChar
-     mov [esi+eax], bl ;// Limpa a posição do bau
+     mov bl, VAZIOCHAR
+     mov [esi+eax], bl  ;// Limpa a posição do bau
+	 inc BausCnt		;// Incrementa o contador de baús abertos
      mov eax, 2
      call RandomRange
      ;// Adiciona Ouro
@@ -1289,10 +1638,19 @@ colisaoBau:
 colisaoMonstro:
      movzx ebx, Level
      cmp Health, bx   ;// compara a vida atual com o dano (dano=level)
-     jbe Fatal
+     jbe fatal
+	 ;// Som de golpe
+	 push eax
+	 mov al, AudioConf
+	 cmp al, 1
+	 jne MUTE10
+	 invoke PlaySound, offset auPunch, NULL, SND_FILENAME or SND_NODEFAULT or SND_ASYNC
+MUTE10:
+	 pop eax
      sub Health, bx
      add Gold, bx
-     mov bl, VazioChar
+	 inc Abates
+     mov bl, VAZIOCHAR
      mov [esi+eax], bl ;// Remove o monstro
      jmp EndInput
 fatal:
@@ -1301,6 +1659,12 @@ fatal:
      jmp EndInput
 
 addGold:
+	 ;// Som de dinheiro
+	mov al, AudioConf
+	cmp al, 1
+	jne MUTE11
+	invoke PlaySound, offset auCoin, NULL, SND_FILENAME or SND_NODEFAULT or SND_ASYNC
+MUTE11:
      mov eax, 3          
      call RandomRange    
      inc eax             ;// gera um número aleatório entre 1 e 3
@@ -1309,6 +1673,12 @@ addGold:
      jmp EndInput
 
 addHealth:
+	 ;// Som de poção
+	mov al, AudioConf
+	cmp al, 1
+	jne MUTE12
+	invoke PlaySound, offset auPotion, NULL, SND_FILENAME or SND_NODEFAULT or SND_ASYNC
+MUTE12:
      mov al, Level
      call RandomRange              ;// gera um numero aleatorio entre 1 e o Level atual
      inc eax

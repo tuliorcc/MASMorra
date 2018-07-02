@@ -1,18 +1,42 @@
 INCLUDE Irvine32.inc
+INCLUDELIB Winmm.lib	;// Biblioteca do PlaySound
+
+PlaySound PROTO, pszSound : PTR BYTE, hmod : DWORD, fdwSound : DWORD
 
 ;// -------------------------------------------------------------------------
 ;//  DEFINIÇÃO DE CONSTANTES
 ;// -------------------------------------------------------------------------
-COLS = 80            ;// Colunas do jogo
-ROWS = 25            ;// Linhas do jogo
-MAPCOLS = (COLS - 2) ;// Colunas do mapa
-MAPROWS = (ROWS - 5) ;// Linhas do mapa
-MENUQNT = 5			 ;// Quantas opções tem o menu
+COLS	= 80			;// Colunas do jogo
+ROWS	= 25			;// Linhas do jogo
+MAPCOLS = (COLS - 2)	;// Colunas do mapa
+MAPROWS = (ROWS - 5)	;// Linhas do mapa
+MENUQNT = 5				;// Quantas opções tem o menu
+
+;// -------------------------------------------------------------------------
+;//  CONSTANTES: PLAYSOUND
+;// -------------------------------------------------------------------------
+SND_FILENAME  = 20000h
+SND_ASYNC	  = 00001h
+SND_NODEFAULT = 00002h
+SND_LOOP	  = 00008h
 
 ;// -------------------------------------------------------------------------
 ;//  DEFINIÇÃO DE VARIÁVEIS
 ;// -------------------------------------------------------------------------
 .data
+;// -------------------------------------------------------------------------
+;//  VARIÁVEIS: ÁUDIOS
+;// -------------------------------------------------------------------------
+auGameOver	BYTE 'game_over.wav', 0
+auClick		BYTE 'click.wav', 0
+auCave		BYTE 'cave.wav', 0
+auEvil1		BYTE 'evil_laugh1.wav', 0
+auEvil2		BYTE 'evil_laugh2.wav', 0
+auHurt1		BYTE 'hurt1.wav', 0
+auHurt2		BYTE 'hurt2.wav', 0
+auPunch		BYTE 'punch.wav', 0
+auWS		BYTE 'wscream.wav', 0
+
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: TELA
 ;// -------------------------------------------------------------------------
@@ -643,6 +667,8 @@ main PROC
 	call HideCursor							;// Esconde o cursor piscante
 	mov cl, 0								;// Inicia o seletor do menu na primeira opção
 	call ShowMenu							;// Mostra o menu principal
+	;// Música de fundo do jogo
+	invoke PlaySound, offset musMenu, NULL, SND_FILENAME or SND_ASYNC or SND_NODEFAULT or SND_LOOP
 	call Randomize							;// Randomiza a seed
 	call LimpaTela							;// Limpa a tela
 	call drawBordas							;// Desenha as bordas do jogo

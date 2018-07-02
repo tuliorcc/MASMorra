@@ -45,6 +45,7 @@ strAttack DB 'ATTACK: ',0
 Gold WORD 0
 strGold DB 'GOLD: ',0
 isDead DB 0
+PosMonstro WORD 0   ;// Usado para a movimentação dos monstros
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: GERAÇÃO DE MAPAS
@@ -818,11 +819,15 @@ InsertMonstros PROC
      mov bl, VazioChar
 
 random:
+     mov bl, VazioChar
      mov eax, 1561
      call RandomRange
      mov dl, [esi+eax]
      cmp dl, bl
      jne random
+     mov bl, BauChar
+     cmp dl, bl
+     je random
 
 addMonstro:
      mov dl, MonstroChar
@@ -858,14 +863,21 @@ gameloop:
      call PrintMapa;// Desenha o mapa
      call drawStatus;// Escreve os status
      call PlayerMove
-     cmp inStairs, 0
+
+     cmp inStairs, 0 ;// Verifica se o o jogador se encontra na escada
      jne NextLevel
-     cmp isDead, 0
+     cmp isDead, 0  ;// Verifica se o jogador esta morto
      jne EndGame
+     
+     call PrintMapa
+     mov eax, 50
+     call Delay
+     call MoveMonstros
+     
      jmp gameloop
 
 NextLevel:
-     mov inStairs, 0
+     mov inStairs, 0 
      inc Level
      jmp InitLevel
  
@@ -873,6 +885,204 @@ EndGame:
 
      ret
 MainGame ENDP
+
+;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: MoveMonstros
+;// -------------------------------------------------------------------------
+;//	 OBJETIVO: Move os monstros aleatoriamente
+;//  PARÂMETROS: Não Possui
+;//  RETORNO: Não Possui
+;// -------------------------------------------------------------------------
+MoveMonstros PROC
+     
+     mov esi, OFFSET map
+     mov ecx, 1559
+     mov bl, MonstroChar
+
+Scan:
+     cmp [esi+ecx], bl
+     je Monstro
+     loop Scan
+     jmp Fim
+
+Monstro: 
+     call MonstroMoveCheck
+     loop Scan
+
+Fim:
+     ret
+MoveMonstros ENDP
+
+;// -------------------------------------------------------------------------
+;//  PROCEDIMENTO: MonstroMoveCheck
+;// -------------------------------------------------------------------------
+;//	 OBJETIVO: Lê a entrada do jogador e move o personagem
+;//  PARÂMETROS: Não Possui
+;//  RETORNO: Não Possui
+;// -------------------------------------------------------------------------
+
+MonstroMoveCheck PROC uses esi eax ebx
+     
+     mov PosMonstro, cx
+
+Dir: 
+     call Randomize
+     mov eax, 4
+     call RandomRange
+     cmp eax, 0
+     je MonUp
+     cmp eax, 1
+     je MonRight
+     cmp eax, 2
+     je MonDown
+     cmp eax, 3
+     je MonLeft
+
+MonUp:
+     movzx eax, PosMonstro
+     cmp ax, 77
+     jbe EndMov     ;// Tenta outra direção caso inválido
+
+     ;// Checa se existe uma parede:
+     sub eax, 78
+     mov bl, paredeChar
+     cmp [esi + eax], bl
+     je EndMov
+     ;// Move caso válido
+     mov bl, vazioChar
+     cmp[esi + eax], bl
+     je MovUp
+     ;// Outras colisões
+     jmp colisao
+
+MonDown:
+     mov ax, PosMonstro
+     mov bx, 1482
+     cmp ax, bx
+     jbe EndMov     ;// Tenta outra direção caso inválido
+
+     ;// Checa se existe uma parede:
+     add eax, 78
+     mov bl, paredeChar
+     cmp[esi + eax], bl
+     je EndMov
+     ;// Move caso válido
+     mov bl, vazioChar
+     cmp[esi + eax], bl
+     je MovDown
+     jmp colisao
+
+MonLeft:
+     mov ax, PosMonstro
+     mov bl, 78
+     div bl             ;// pos/78 - Resto fica em AH
+     cmp ah, 0
+     jbe EndMov;// Tenta outra direção caso inválido
+
+     mov ax, posMonstro
+     ;// Checa se existe uma parede:
+     dec ax
+     mov bl, paredeChar
+     cmp [esi+eax], bl
+     je EndMov
+     ;// Move caso válido
+     mov bl, vazioChar
+     cmp [esi + eax], bl
+     je MovLeft
+     jmp colisao
+
+MonRight:
+     mov ax, PosMonstro
+     inc ax         ;// ax = pos+1
+     mov bl, 78
+     div bl         ;// (pos+1)/78 - Resto fica em AH
+     cmp ah, 0      ;// se (pos+1)%78 = 0, então não é valido
+     jbe EndMov     ;// Tenta outra direção caso inválido     
+
+     mov ax, posMonstro
+     ;// Checa se existe uma parede:
+     inc ax
+     mov bl, paredeChar
+     cmp[esi + eax], bl
+     je EndMov
+     ;// Move caso válido
+     mov bl, vazioChar
+     cmp[esi + eax], bl
+     je MovRight
+     jmp colisao
+
+Colisao:
+     ;// Colisão com escada
+     mov bl, EscadaChar
+     cmp[esi + eax], bl
+     jmp EndMov
+     ;// Colisão com bau
+     mov bl, BauChar
+     cmp[esi + eax], bl
+     jmp EndMov
+	;// Colisão com o Heroi
+     mov bl, HeroiChar
+     cmp[esi + eax], bl
+     je colisaoHeroi
+	;// Colisão com monstro
+     mov bl, MonstroChar
+     cmp[esi + eax], bl
+     jmp Dir   
+
+MovUp:
+     sub PosMonstro, 78
+     mov ax, PosMonstro
+     mov bl, vazioChar
+     mov [esi + eax + 78], bl   ;// Limpa posição atual
+     mov bl, MonstroCHar
+     mov [esi + eax], bl ; // Adiciona o heroi na nova posição
+     sub ecx, 79
+     jmp EndMov
+
+MovDown :
+     add PosMonstro, 78
+     mov ax, PosMonstro
+     mov bl, vazioChar
+     mov[esi + eax - 78], bl   ;// Limpa posição atual
+     mov bl, MonstroChar
+     mov[esi + eax], bl ; // Adiciona o heroi na nova posição
+     jmp EndMov
+
+MovLeft :
+     dec PosMonstro
+     mov ax, PosMonstro
+     mov bl, vazioChar
+     mov[esi + eax + 1], bl;// Limpa posição atual
+     mov bl, MonstroChar
+     mov[esi + eax], bl; // Adiciona o heroi na nova posição
+     dec ecx
+     jmp EndMov
+
+MovRight :
+     inc PosMonstro
+     mov ax, PosMonstro
+     mov bl, vazioChar
+     mov[esi + eax - 1], bl;// Limpa posição atual
+     mov bl, MonstroChar
+     mov[esi + eax], bl; // Adiciona o heroi na nova posição
+     jmp EndMov
+
+colisaoHeroi:
+     movzx ebx, Level
+     cmp Health, bx   ;// compara a vida atual com o dano (dano=level)
+     jbe Fatal
+     sub Health, bx ;// dá dano caso não seja fatal
+     jmp EndMov
+
+fatal:
+     mov Health, 0
+     mov isDead, 1
+     jmp EndMov
+
+
+EndMov:
+     ret
+MonstroMoveCheck ENDP
 
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: PlayerMove
@@ -1075,6 +1285,7 @@ addHealth:
 EndInput:     
      ret
 PlayerMove ENDP
+
 
 ;// -------------------------------------------------------------------------
 ;//  PROCEDIMENTO: main

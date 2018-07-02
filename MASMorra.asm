@@ -504,7 +504,7 @@ drawStatus ENDP
 ;//				 MAPROWS - Quantidade de linhas no mapa
 ;//  RETORNO: Não Possui
 ;// -------------------------------------------------------------------------
-PrintMapa PROC USES ecx esi ebx eax
+PrintMapa PROC USES ecx esi ebx eax edx
      
      mov eax, black + (gray * 16)
      call SETTEXTCOLOR
@@ -527,13 +527,18 @@ L2:
      cmp al, BauChar
      je Bau
 	cmp al, MonstroChar
+     je Monstro
      push eax
      mov eax, black + (gray * 16);// Volta para a cor padrão
      call SETTEXTCOLOR
      pop eax
 Default:
      call WriteChar ;// Desenha padrão (parede ou nada)
-     jmp DefLoop
+     inc ebx   
+     loop L2   
+     pop ecx
+     loop L1
+     jmp Fim
 
 Hero:
      push eax                      ;// guarda 
@@ -544,31 +549,26 @@ Hero:
 
 Escada:
      push eax                      ;// guarda 
-     mov eax, lightGreen + (gray * 16)  ;// Seleciona o branco  
+     mov eax, lightGreen + (gray * 16)  ;// Seleciona o verde  
      call SETTEXTCOLOR
      pop eax
      jmp Default
 
 Bau:
      push eax                      ;// guarda 
-     mov eax, yellow + (gray * 16)  ;// Seleciona o branco  
+     mov eax, yellow + (gray * 16)  ;// Seleciona o amarelo  
      call SETTEXTCOLOR
      pop eax
      jmp Default
 
-Montro:
+Monstro:
      push eax                      ;// guarda 
-     mov eax, red + (gray * 16)  ;// Seleciona o branco  
+     mov eax, red + (gray * 16)  ;// Seleciona o vermelho  
      call SETTEXTCOLOR
      pop eax
      jmp Default
 
-DefLoop:          ;// Continua os loops padrão
-     inc ebx   
-     loop L2   
-     pop ecx
-     loop L1
-     
+Fim:    
      ;// Reseta a cor do print
      mov eax, white + (black * 16)
      call SETTEXTCOLOR
@@ -800,7 +800,7 @@ InsertBaus ENDP
 ;// -------------------------------------------------------------------------
 InsertMonstros PROC
      mov esi, OFFSET Map
-     mov ecx, 2
+     mov ecx, 5
      mov bl, VazioChar
 
 random:
@@ -969,7 +969,6 @@ Colisao:
      cmp[esi + eax], bl
      je colisaoMonstro
 	
-     ;// -------------------------- INSERIR COLISÕES
 
 MovUp:
      sub posHeroi, 78
@@ -1024,36 +1023,33 @@ colisaoBau:
      je addHealth
 
 colisaoMonstro:
+     movzx ebx, Level
+     cmp Health, bx   ;// compara a vida atual com o dano (dano=level)
+     jbe Fatal
+     sub Health, bx
      mov bl, VazioChar
-     mov eax, 2
-	call RandomRange
-     ;// Diminui vida
-     cmp eax, 0
-     je subHealth
-     
+     mov [esi+eax], bl ;// Remove o monstro
+     jmp EndInput
+fatal:
+     mov Health, 0
+     jmp EndInput
+
 addGold:
-     mov eax, 3
-     call RandomRange
-     inc eax
-     mul Level
+     mov eax, 3          
+     call RandomRange    
+     inc eax             ;// gera um número aleatório entre 1 e 3
+     mul Level           ;// multiplica pelo level e adiciona no ouro
      add Gold, ax
      jmp EndInput
 
 addHealth:
      mov al, Level
-     call RandomRange
+     call RandomRange              ;// gera um numero aleatorio entre 1 e o Level atual
      inc eax
-     add eax, dword PTR Level
+     add eax, dword PTR Level      ;// adiciona o level atual e adiciona o resultado como vida
      add Health, ax
      jmp EndInput
 
-subHealth:
-     mov al, Level
-     call RandomRange
-     inc eax
-     add eax, dword PTR Level
-     sub Health, ax
-     jmp EndInput
 
 EndInput:     
      ret

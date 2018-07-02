@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.14.26431.0	    07/01/18 15:36:33
+Microsoft (R) Macro Assembler Version 14.14.26429.4	    07/01/18 21:09:52
 MASMorra.asm						     Page 1 - 1
 
 
@@ -1116,7 +1116,7 @@ MASMorra.asm						     Page 1 - 1
  000000E2  E8 00000000 E   *	    call   ExitProcess
 				;// SELEÇÃO DO MENU: Novo Jogo
  000000E7			opNovoJogo:
- 000000E7  E8 00000553		          call MainGame
+ 000000E7  E8 00000557		          call MainGame
  000000EC  EB 31				jmp MenuRetWait 
 				;// SELEÇÃO DO MENU: Conquistas
  000000EE			opConquistas:
@@ -1389,86 +1389,88 @@ MASMorra.asm						     Page 1 - 1
 				;//				 MAPROWS - Quantidade de linhas no mapa
 				;//  RETORNO: Não Possui
 				;// -------------------------------------------------------------------------
- 00000334			PrintMapa PROC USES ecx esi ebx eax
+ 00000334			PrintMapa PROC USES ecx esi ebx eax edx
 				     
  00000334  51		   *	    push   ecx
  00000335  56		   *	    push   esi
  00000336  53		   *	    push   ebx
  00000337  50		   *	    push   eax
- 00000338  B8 00000080		     mov eax, black + (gray * 16)
- 0000033D  E8 00000000 E	     call SETTEXTCOLOR
- 00000342  B6 00		     mov dh, 0
- 00000344  B2 01		     mov dl, 1
- 00000346  B9 00000014		     mov ecx, MAPROWS
- 0000034B  BE 00000002 R	     mov esi, OFFSET map
- 00000350  BB 00000000		     mov ebx, 0
- 00000355			L1:
- 00000355  80 C6 01		     add dh, 1
- 00000358  51			     push ecx                 ;// Guarda ecx
- 00000359  B9 0000004E		     mov ecx, MAPCOLS         ;// ecx = numero de colunas do mapa
- 0000035E  E8 00000000 E	     call GOTOXY              ;// Função Irvine : Configura o cursor para a linha dh e a coluna dl
- 00000363			L2:
- 00000363  8A 04 1E		     mov al, [esi + ebx]
- 00000366  3A 05 0000061C R	     cmp al, HeroiChar
- 0000036C  74 29		     je Hero
- 0000036E  3A 05 0000061F R	     cmp al, EscadaChar
- 00000374  74 2F		     je Escada
- 00000376  3A 05 00000622 R	     cmp al, BauChar
- 0000037C  74 35		     je Bau
- 0000037E  3A 05 00000623 R		cmp al, MonstroChar
- 00000384  50			     push eax
- 00000385  B8 00000080		     mov eax, black + (gray * 16);// Volta para a cor padrão
- 0000038A  E8 00000000 E	     call SETTEXTCOLOR
- 0000038F  58			     pop eax
- 00000390			Default:
- 00000390  E8 00000000 E	     call WriteChar ;// Desenha padrão (parede ou nada)
- 00000395  EB 38		     jmp DefLoop
+ 00000338  52		   *	    push   edx
+ 00000339  B8 00000080		     mov eax, black + (gray * 16)
+ 0000033E  E8 00000000 E	     call SETTEXTCOLOR
+ 00000343  B6 00		     mov dh, 0
+ 00000345  B2 01		     mov dl, 1
+ 00000347  B9 00000014		     mov ecx, MAPROWS
+ 0000034C  BE 00000002 R	     mov esi, OFFSET map
+ 00000351  BB 00000000		     mov ebx, 0
+ 00000356			L1:
+ 00000356  80 C6 01		     add dh, 1
+ 00000359  51			     push ecx                 ;// Guarda ecx
+ 0000035A  B9 0000004E		     mov ecx, MAPCOLS         ;// ecx = numero de colunas do mapa
+ 0000035F  E8 00000000 E	     call GOTOXY              ;// Função Irvine : Configura o cursor para a linha dh e a coluna dl
+ 00000364			L2:
+ 00000364  8A 04 1E		     mov al, [esi + ebx]
+ 00000367  3A 05 0000061C R	     cmp al, HeroiChar
+ 0000036D  74 31		     je Hero
+ 0000036F  3A 05 0000061F R	     cmp al, EscadaChar
+ 00000375  74 37		     je Escada
+ 00000377  3A 05 00000622 R	     cmp al, BauChar
+ 0000037D  74 3D		     je Bau
+ 0000037F  3A 05 00000623 R		cmp al, MonstroChar
+ 00000385  74 43		     je Monstro
+ 00000387  50			     push eax
+ 00000388  B8 00000080		     mov eax, black + (gray * 16);// Volta para a cor padrão
+ 0000038D  E8 00000000 E	     call SETTEXTCOLOR
+ 00000392  58			     pop eax
+ 00000393			Default:
+ 00000393  E8 00000000 E	     call WriteChar ;// Desenha padrão (parede ou nada)
+ 00000398  43			     inc ebx   
+ 00000399  E2 C9		     loop L2   
+ 0000039B  59			     pop ecx
+ 0000039C  E2 B8		     loop L1
+ 0000039E  EB 38		     jmp Fim
 
- 00000397			Hero:
- 00000397  50			     push eax                      ;// guarda 
- 00000398  B8 0000008F		     mov eax, white + (gray * 16)  ;// Seleciona o branco  
- 0000039D  E8 00000000 E	     call SETTEXTCOLOR
- 000003A2  58			     pop eax
- 000003A3  EB EB		     jmp Default
+ 000003A0			Hero:
+ 000003A0  50			     push eax                      ;// guarda 
+ 000003A1  B8 0000008F		     mov eax, white + (gray * 16)  ;// Seleciona o branco  
+ 000003A6  E8 00000000 E	     call SETTEXTCOLOR
+ 000003AB  58			     pop eax
+ 000003AC  EB E5		     jmp Default
 
- 000003A5			Escada:
- 000003A5  50			     push eax                      ;// guarda 
- 000003A6  B8 0000008A		     mov eax, lightGreen + (gray * 16)  ;// Seleciona o branco  
- 000003AB  E8 00000000 E	     call SETTEXTCOLOR
- 000003B0  58			     pop eax
- 000003B1  EB DD		     jmp Default
+ 000003AE			Escada:
+ 000003AE  50			     push eax                      ;// guarda 
+ 000003AF  B8 0000008A		     mov eax, lightGreen + (gray * 16)  ;// Seleciona o verde  
+ 000003B4  E8 00000000 E	     call SETTEXTCOLOR
+ 000003B9  58			     pop eax
+ 000003BA  EB D7		     jmp Default
 
- 000003B3			Bau:
- 000003B3  50			     push eax                      ;// guarda 
- 000003B4  B8 0000008E		     mov eax, yellow + (gray * 16)  ;// Seleciona o branco  
- 000003B9  E8 00000000 E	     call SETTEXTCOLOR
- 000003BE  58			     pop eax
- 000003BF  EB CF		     jmp Default
+ 000003BC			Bau:
+ 000003BC  50			     push eax                      ;// guarda 
+ 000003BD  B8 0000008E		     mov eax, yellow + (gray * 16)  ;// Seleciona o amarelo  
+ 000003C2  E8 00000000 E	     call SETTEXTCOLOR
+ 000003C7  58			     pop eax
+ 000003C8  EB C9		     jmp Default
 
- 000003C1			Montro:
- 000003C1  50			     push eax                      ;// guarda 
- 000003C2  B8 00000084		     mov eax, red + (gray * 16)  ;// Seleciona o branco  
- 000003C7  E8 00000000 E	     call SETTEXTCOLOR
- 000003CC  58			     pop eax
- 000003CD  EB C1		     jmp Default
+ 000003CA			Monstro:
+ 000003CA  50			     push eax                      ;// guarda 
+ 000003CB  B8 00000084		     mov eax, red + (gray * 16)  ;// Seleciona o vermelho  
+ 000003D0  E8 00000000 E	     call SETTEXTCOLOR
+ 000003D5  58			     pop eax
+ 000003D6  EB BB		     jmp Default
 
- 000003CF			DefLoop:          ;// Continua os loops padrão
- 000003CF  43			     inc ebx   
- 000003D0  E2 91		     loop L2   
- 000003D2  59			     pop ecx
- 000003D3  E2 80		     loop L1
-				     
+ 000003D8			Fim:    
 				     ;// Reseta a cor do print
- 000003D5  B8 0000000F		     mov eax, white + (black * 16)
- 000003DA  E8 00000000 E	     call SETTEXTCOLOR
+ 000003D8  B8 0000000F		     mov eax, white + (black * 16)
+ 000003DD  E8 00000000 E	     call SETTEXTCOLOR
 
 				     ret
- 000003DF  58		   *	    pop    eax
- 000003E0  5B		   *	    pop    ebx
- 000003E1  5E		   *	    pop    esi
- 000003E2  59		   *	    pop    ecx
- 000003E3  C3		   *	    ret    00000h
- 000003E4			PrintMapa ENDP
+ 000003E2  5A		   *	    pop    edx
+ 000003E3  58		   *	    pop    eax
+ 000003E4  5B		   *	    pop    ebx
+ 000003E5  5E		   *	    pop    esi
+ 000003E6  59		   *	    pop    ecx
+ 000003E7  C3		   *	    ret    00000h
+ 000003E8			PrintMapa ENDP
 
 				;// ==============================================================
 				;// ResetMapa PROC
@@ -1477,25 +1479,25 @@ MASMorra.asm						     Page 1 - 1
 				;//		 MAPROWS - Quantidade de linhas no mapa
 				;// Retorna: Sem retorno
 				;// ==============================================================
- 000003E4			ResetMapa PROC uses eax ecx esi
- 000003E4  50		   *	    push   eax
- 000003E5  51		   *	    push   ecx
- 000003E6  56		   *	    push   esi
- 000003E7  B9 00000000		     mov ecx, 0
- 000003EC  BE 00000002 R	     mov esi, OFFSET Map
- 000003F1  A0 00000620 R	     mov al, paredeChar
- 000003F6			L1:
- 000003F6  88 04 0E		     mov [esi+ecx], al
- 000003F9  41			     inc ecx
- 000003FA  81 F9 00000618	     cmp ecx, LENGTHOF Map
- 00000400  72 F4		     jb L1
+ 000003E8			ResetMapa PROC uses eax ecx esi
+ 000003E8  50		   *	    push   eax
+ 000003E9  51		   *	    push   ecx
+ 000003EA  56		   *	    push   esi
+ 000003EB  B9 00000000		     mov ecx, 0
+ 000003F0  BE 00000002 R	     mov esi, OFFSET Map
+ 000003F5  A0 00000620 R	     mov al, paredeChar
+ 000003FA			L1:
+ 000003FA  88 04 0E		     mov [esi+ecx], al
+ 000003FD  41			     inc ecx
+ 000003FE  81 F9 00000618	     cmp ecx, LENGTHOF Map
+ 00000404  72 F4		     jb L1
 				     
 				     ret
- 00000402  5E		   *	    pop    esi
- 00000403  59		   *	    pop    ecx
- 00000404  58		   *	    pop    eax
- 00000405  C3		   *	    ret    00000h
- 00000406			ResetMapa ENDP
+ 00000406  5E		   *	    pop    esi
+ 00000407  59		   *	    pop    ecx
+ 00000408  58		   *	    pop    eax
+ 00000409  C3		   *	    ret    00000h
+ 0000040A			ResetMapa ENDP
 
 				;// ==============================================================
 				;// GeraMapa PROC
@@ -1510,199 +1512,199 @@ MASMorra.asm						     Page 1 - 1
 				;//          passos - numero de passos que serão dados
 				;// Retorna: Sem retorno
 				;// ==============================================================
- 00000406			GeraMapa PROC USES eax ebx ecx edx esi
+ 0000040A			GeraMapa PROC USES eax ebx ecx edx esi
 				;// ------------------------- Reseta mapa e variáveis
- 00000406  50		   *	    push   eax
- 00000407  53		   *	    push   ebx
- 00000408  51		   *	    push   ecx
- 00000409  52		   *	    push   edx
- 0000040A  56		   *	    push   esi
- 0000040B  E8 FFFFFFD4		     call ResetMapa
- 00000410  66| C7 05		     mov emptyCells, 0
+ 0000040A  50		   *	    push   eax
+ 0000040B  53		   *	    push   ebx
+ 0000040C  51		   *	    push   ecx
+ 0000040D  52		   *	    push   edx
+ 0000040E  56		   *	    push   esi
+ 0000040F  E8 FFFFFFD4		     call ResetMapa
+ 00000414  66| C7 05		     mov emptyCells, 0
 	   0000064C R
 	   0000
 				;// ------------------------- Randomiza a meta de células limpas - entre 620 e 950 (aprox. 40 a 60 % do mapa)
- 00000419  B8 000001C3		     mov eax, 451
- 0000041E  E8 00000000 E	     call RandomRange
- 00000423  05 000001F4		     add eax, 500
- 00000428  66| A3		     mov emptyGoal, ax 
+ 0000041D  B8 000001C3		     mov eax, 451
+ 00000422  E8 00000000 E	     call RandomRange
+ 00000427  05 000001F4		     add eax, 500
+ 0000042C  66| A3		     mov emptyGoal, ax 
 	   0000064E R
 
 				;// ------------------------- Define uma posição inicial aleatória NO MEIO DO MAPA e salva em pos
- 0000042E  BE 00000002 R	     mov esi, OFFSET Map
- 00000433  B8 00000209		     mov eax, 521
- 00000438  E8 00000000 E	     call RandomRange
- 0000043D  05 00000208		     add eax, 520
- 00000442  66| A3		     mov pos, ax   
+ 00000432  BE 00000002 R	     mov esi, OFFSET Map
+ 00000437  B8 00000209		     mov eax, 521
+ 0000043C  E8 00000000 E	     call RandomRange
+ 00000441  05 00000208		     add eax, 520
+ 00000446  66| A3		     mov pos, ax   
 	   00000651 R
- 00000448  66| A3		     mov posHeroi, ax
+ 0000044C  66| A3		     mov posHeroi, ax
 	   0000061A R
 
 				;// ------------------------- Enquanto Células vazias < Meta
- 0000044E  66| A1		WL1: mov ax, emptyGoal
+ 00000452  66| A1		WL1: mov ax, emptyGoal
 	   0000064E R
- 00000454  66| 39 05		     cmp emptyCells, ax
+ 00000458  66| 39 05		     cmp emptyCells, ax
 	   0000064C R
- 0000045B  0F 83 00000150	     jae Fim
+ 0000045F  0F 83 00000150	     jae Fim
 
 				;// ------------------------- Randomiza direção e num. de passos (de 2 a 5)
 				     ;----------- Randomiza direção (0-4)
- 00000461  B8 00000004		     mov eax, 4
- 00000466  E8 00000000 E	     call RandomRange
- 0000046B  A2 00000650 R	     mov direction, al
+ 00000465  B8 00000004		     mov eax, 4
+ 0000046A  E8 00000000 E	     call RandomRange
+ 0000046F  A2 00000650 R	     mov direction, al
 				     ;// --------- Randomiza número de passos (1-9)
- 00000470  B8 00000009		     mov eax, 9
- 00000475  E8 00000000 E	     call RandomRange
- 0000047A  40			     inc eax
- 0000047B  A2 00000653 R	     mov passos, al
+ 00000474  B8 00000009		     mov eax, 9
+ 00000479  E8 00000000 E	     call RandomRange
+ 0000047E  40			     inc eax
+ 0000047F  A2 00000653 R	     mov passos, al
 				     ;// --------- Verifica direção e salta para o trecho correspondente
- 00000480  BE 00000002 R	     mov esi, OFFSET Map
- 00000485  80 3D 00000650 R	     cmp direction, 0
+ 00000484  BE 00000002 R	     mov esi, OFFSET Map
+ 00000489  80 3D 00000650 R	     cmp direction, 0
 	   00
- 0000048C  74 23		     je MoveNorth
- 0000048E  80 3D 00000650 R	     cmp direction, 1
+ 00000490  74 23		     je MoveNorth
+ 00000492  80 3D 00000650 R	     cmp direction, 1
 	   01
- 00000495  74 50		     je MoveEast
- 00000497  80 3D 00000650 R	     cmp direction, 2
+ 00000499  74 50		     je MoveEast
+ 0000049B  80 3D 00000650 R	     cmp direction, 2
 	   02
- 0000049E  0F 84 0000008A	     je MoveSouth
- 000004A4  80 3D 00000650 R	     cmp direction, 3
+ 000004A2  0F 84 0000008A	     je MoveSouth
+ 000004A8  80 3D 00000650 R	     cmp direction, 3
 	   03
- 000004AB  0F 84 000000BB	     je MoveWest
+ 000004AF  0F 84 000000BB	     je MoveWest
 
- 000004B1			MoveNorth:
+ 000004B5			MoveNorth:
 				     ;// ---------- Tira paredes para o norte
- 000004B1  33 C9		     xor ecx, ecx
- 000004B3  8A 0D 00000653 R	     mov cl, passos
- 000004B9			MNC:
- 000004B9  66| A1		     mov ax, pos         
+ 000004B5  33 C9		     xor ecx, ecx
+ 000004B7  8A 0D 00000653 R	     mov cl, passos
+ 000004BD			MNC:
+ 000004BD  66| A1		     mov ax, pos         
 	   00000651 R
- 000004BF  66| 83 E8 4E		     sub ax, MAPCOLS     ;// Se não pode mover para cima,
- 000004C3  78 89		     js WL1              ;// volta para o inicio
+ 000004C3  66| 83 E8 4E		     sub ax, MAPCOLS     ;// Se não pode mover para cima,
+ 000004C7  78 89		     js WL1              ;// volta para o inicio
 				     
- 000004C5  66| A3		     mov pos, ax;// salva a nova posição
+ 000004C9  66| A3		     mov pos, ax;// salva a nova posição
 	   00000651 R
 
- 000004CB  8A 1D 00000621 R	     mov bl, vazioChar
- 000004D1  38 1C 06		     cmp[esi + eax], bl
- 000004D4  74 0A		     je NowriteN
- 000004D6  66| FF 05		     inc emptyCells
+ 000004CF  8A 1D 00000621 R	     mov bl, vazioChar
+ 000004D5  38 1C 06		     cmp[esi + eax], bl
+ 000004D8  74 0A		     je NowriteN
+ 000004DA  66| FF 05		     inc emptyCells
 	   0000064C R
- 000004DD  88 1C 06		     mov[esi + eax], bl
- 000004E0			NowriteN:  
- 000004E0  E2 D7		     loop MNC
- 000004E2  E9 FFFFFF67		     jmp WL1
+ 000004E1  88 1C 06		     mov[esi + eax], bl
+ 000004E4			NowriteN:  
+ 000004E4  E2 D7		     loop MNC
+ 000004E6  E9 FFFFFF67		     jmp WL1
 
- 000004E7			MoveEast:
+ 000004EB			MoveEast:
 				     ;// ----------Tira paredes para o leste
- 000004E7  33 C9		     xor ecx, ecx
- 000004E9  8A 0D 00000653 R	     mov cl, passos
- 000004EF			MEC: 
- 000004EF  66| A1		     mov ax, pos
+ 000004EB  33 C9		     xor ecx, ecx
+ 000004ED  8A 0D 00000653 R	     mov cl, passos
+ 000004F3			MEC: 
+ 000004F3  66| A1		     mov ax, pos
 	   00000651 R
- 000004F5  66| 40		     inc ax       ;// ax = pos+1
- 000004F7  B3 4E		     mov bl, 78
- 000004F9  F6 F3		     div bl       ;// (pos+1)/78 - Resto fica em AH
- 000004FB  80 FC 00		     cmp ah, 0
- 000004FE  0F 84 FFFFFF4A	     je WL1      ;// se (pos+1)%78 = 0, então não é valido
+ 000004F9  66| 40		     inc ax       ;// ax = pos+1
+ 000004FB  B3 4E		     mov bl, 78
+ 000004FD  F6 F3		     div bl       ;// (pos+1)/78 - Resto fica em AH
+ 000004FF  80 FC 00		     cmp ah, 0
+ 00000502  0F 84 FFFFFF4A	     je WL1      ;// se (pos+1)%78 = 0, então não é valido
 				     
- 00000504  66| A1		     mov ax, pos
+ 00000508  66| A1		     mov ax, pos
 	   00000651 R
- 0000050A  66| 40		     inc ax
- 0000050C  66| A3		     mov pos, ax  ;// salva a nova posição
+ 0000050E  66| 40		     inc ax
+ 00000510  66| A3		     mov pos, ax  ;// salva a nova posição
 	   00000651 R
 
- 00000512  8A 1D 00000621 R	     mov bl, vazioChar
- 00000518  38 1C 06		     cmp[esi + eax], bl
- 0000051B  74 0A		     je NowriteE
- 0000051D  66| FF 05		     inc emptyCells
+ 00000516  8A 1D 00000621 R	     mov bl, vazioChar
+ 0000051C  38 1C 06		     cmp[esi + eax], bl
+ 0000051F  74 0A		     je NowriteE
+ 00000521  66| FF 05		     inc emptyCells
 	   0000064C R
- 00000524  88 1C 06		     mov[esi + eax], bl
- 00000527			NowriteE:  
- 00000527  E2 C6		     loop MEC
- 00000529  E9 FFFFFF20		     jmp WL1
+ 00000528  88 1C 06		     mov[esi + eax], bl
+ 0000052B			NowriteE:  
+ 0000052B  E2 C6		     loop MEC
+ 0000052D  E9 FFFFFF20		     jmp WL1
 
 
- 0000052E			MoveSouth:
+ 00000532			MoveSouth:
 				     ;// ----------Tira paredes para o sul
- 0000052E  33 C9		     xor ecx, ecx
- 00000530  8A 0D 00000653 R	     mov cl, passos
- 00000536			MSC: 
- 00000536  66| A1		     mov ax, pos
+ 00000532  33 C9		     xor ecx, ecx
+ 00000534  8A 0D 00000653 R	     mov cl, passos
+ 0000053A			MSC: 
+ 0000053A  66| A1		     mov ax, pos
 	   00000651 R
- 0000053C  66| 83 C0 4E		     add ax, MAPCOLS
- 00000540  66| 3D 0617		     cmp ax, 1559     ;// Se não pode mover para baixo,
- 00000544  0F 87 FFFFFF04	     ja WL1           ;// volta para o inicio
+ 00000540  66| 83 C0 4E		     add ax, MAPCOLS
+ 00000544  66| 3D 0617		     cmp ax, 1559     ;// Se não pode mover para baixo,
+ 00000548  0F 87 FFFFFF04	     ja WL1           ;// volta para o inicio
 
- 0000054A  66| A3		     mov pos, ax     ;// salva a nova posição
+ 0000054E  66| A3		     mov pos, ax     ;// salva a nova posição
 	   00000651 R
 
- 00000550  8A 1D 00000621 R	     mov bl, vazioChar
- 00000556  38 1C 06		     cmp[esi + eax], bl
- 00000559  74 0A		     je NowriteS
- 0000055B  66| FF 05		     inc emptyCells
+ 00000554  8A 1D 00000621 R	     mov bl, vazioChar
+ 0000055A  38 1C 06		     cmp[esi + eax], bl
+ 0000055D  74 0A		     je NowriteS
+ 0000055F  66| FF 05		     inc emptyCells
 	   0000064C R
- 00000562  88 1C 06		     mov[esi + eax], bl
- 00000565			NowriteS:  
- 00000565  E2 CF		     loop MSC
- 00000567  E9 FFFFFEE2		     jmp WL1
+ 00000566  88 1C 06		     mov[esi + eax], bl
+ 00000569			NowriteS:  
+ 00000569  E2 CF		     loop MSC
+ 0000056B  E9 FFFFFEE2		     jmp WL1
 
- 0000056C			MoveWest:
+ 00000570			MoveWest:
 				     ;// ----------Tira paredes para o oeste
- 0000056C  33 C9		     xor ecx, ecx
- 0000056E  8A 0D 00000653 R	     mov cl, passos
- 00000574			MWC :
- 00000574  66| A1		     mov ax, pos
+ 00000570  33 C9		     xor ecx, ecx
+ 00000572  8A 0D 00000653 R	     mov cl, passos
+ 00000578			MWC :
+ 00000578  66| A1		     mov ax, pos
 	   00000651 R
- 0000057A  B3 4E		     mov bl, 78
- 0000057C  F6 F3		     div bl         ;// pos/78 - Resto fica em AH
- 0000057E  80 FC 00		     cmp ah, 0
- 00000581  0F 84 FFFFFEC7	     je WL1         ;// se pos%78 = 0, então não é valido
+ 0000057E  B3 4E		     mov bl, 78
+ 00000580  F6 F3		     div bl         ;// pos/78 - Resto fica em AH
+ 00000582  80 FC 00		     cmp ah, 0
+ 00000585  0F 84 FFFFFEC7	     je WL1         ;// se pos%78 = 0, então não é valido
 
- 00000587  66| A1		     mov ax, pos
+ 0000058B  66| A1		     mov ax, pos
 	   00000651 R
- 0000058D  66| 48		     dec ax
- 0000058F  66| A3		     mov pos, ax    ;// salva a nova posição
+ 00000591  66| 48		     dec ax
+ 00000593  66| A3		     mov pos, ax    ;// salva a nova posição
 	   00000651 R
 
- 00000595  8A 1D 00000621 R	     mov bl, vazioChar
- 0000059B  38 1C 06		     cmp [esi + eax], bl
- 0000059E  74 0A		     je NowriteW
- 000005A0  66| FF 05		     inc emptyCells
+ 00000599  8A 1D 00000621 R	     mov bl, vazioChar
+ 0000059F  38 1C 06		     cmp [esi + eax], bl
+ 000005A2  74 0A		     je NowriteW
+ 000005A4  66| FF 05		     inc emptyCells
 	   0000064C R
- 000005A7  88 1C 06		     mov [esi + eax], bl
- 000005AA			NowriteW:  
- 000005AA  E2 C8		     loop MWC
- 000005AC  E9 FFFFFE9D		     jmp WL1
+ 000005AB  88 1C 06		     mov [esi + eax], bl
+ 000005AE			NowriteW:  
+ 000005AE  E2 C8		     loop MWC
+ 000005B0  E9 FFFFFE9D		     jmp WL1
 
 
 
- 000005B1			Fim:
+ 000005B5			Fim:
 				     ;// -------- - Insere a Escada no mapa
- 000005B1  66| A1		     mov ax, pos
+ 000005B5  66| A1		     mov ax, pos
 	   00000651 R
- 000005B7  66| A3		     mov posEscada, ax
+ 000005BB  66| A3		     mov posEscada, ax
 	   0000061D R
- 000005BD  8A 1D 0000061F R	     mov bl, EscadaChar
- 000005C3  88 1C 06		     mov [esi+eax], bl
+ 000005C1  8A 1D 0000061F R	     mov bl, EscadaChar
+ 000005C7  88 1C 06		     mov [esi+eax], bl
 
 				     ;// -------- - Insere Personagem no mapa
- 000005C6  66| A1		     mov ax, posHeroi
+ 000005CA  66| A1		     mov ax, posHeroi
 	   0000061A R
- 000005CC  8A 1D 0000061C R	     mov bl, HeroiChar
- 000005D2  88 1C 06		     mov [esi + eax], bl
+ 000005D0  8A 1D 0000061C R	     mov bl, HeroiChar
+ 000005D6  88 1C 06		     mov [esi + eax], bl
 
- 000005D5  E8 0000000B		     call InsertBaus
- 000005DA  E8 00000033			call InsertMonstros
+ 000005D9  E8 0000000B		     call InsertBaus
+ 000005DE  E8 00000033			call InsertMonstros
 
 				     ret
- 000005DF  5E		   *	    pop    esi
- 000005E0  5A		   *	    pop    edx
- 000005E1  59		   *	    pop    ecx
- 000005E2  5B		   *	    pop    ebx
- 000005E3  58		   *	    pop    eax
- 000005E4  C3		   *	    ret    00000h
- 000005E5			GeraMapa ENDP
+ 000005E3  5E		   *	    pop    esi
+ 000005E4  5A		   *	    pop    edx
+ 000005E5  59		   *	    pop    ecx
+ 000005E6  5B		   *	    pop    ebx
+ 000005E7  58		   *	    pop    eax
+ 000005E8  C3		   *	    ret    00000h
+ 000005E9			GeraMapa ENDP
 
 				;// -------------------------------------------------------------------------
 				;//  PROCEDIMENTO: InsertBaus
@@ -1711,25 +1713,25 @@ MASMorra.asm						     Page 1 - 1
 				;//  PARÂMETROS: Não Possui
 				;//  RETORNO: Não Possui
 				;// -------------------------------------------------------------------------
- 000005E5			InsertBaus PROC
- 000005E5  BE 00000002 R	     mov esi, OFFSET Map
- 000005EA  B9 00000002		     mov ecx, 2
- 000005EF  8A 1D 00000621 R	     mov bl, VazioChar
+ 000005E9			InsertBaus PROC
+ 000005E9  BE 00000002 R	     mov esi, OFFSET Map
+ 000005EE  B9 00000002		     mov ecx, 2
+ 000005F3  8A 1D 00000621 R	     mov bl, VazioChar
 
- 000005F5			random:
- 000005F5  B8 00000619		     mov eax, 1561
- 000005FA  E8 00000000 E	     call RandomRange
- 000005FF  8A 14 06		     mov dl, [esi+eax]
- 00000602  3A D3		     cmp dl, bl
- 00000604  75 EF		     jne random
+ 000005F9			random:
+ 000005F9  B8 00000619		     mov eax, 1561
+ 000005FE  E8 00000000 E	     call RandomRange
+ 00000603  8A 14 06		     mov dl, [esi+eax]
+ 00000606  3A D3		     cmp dl, bl
+ 00000608  75 EF		     jne random
 
- 00000606			addBau:
- 00000606  8A 15 00000622 R	     mov dl, BauChar
- 0000060C  88 14 06		     mov [esi+eax], dl
- 0000060F  E2 E4		     loop random
+ 0000060A			addBau:
+ 0000060A  8A 15 00000622 R	     mov dl, BauChar
+ 00000610  88 14 06		     mov [esi+eax], dl
+ 00000613  E2 E4		     loop random
 
- 00000611  C3			     ret
- 00000612			InsertBaus ENDP
+ 00000615  C3			     ret
+ 00000616			InsertBaus ENDP
 
 				;// -------------------------------------------------------------------------
 				;//  PROCEDIMENTO: InsertMonstros
@@ -1738,25 +1740,25 @@ MASMorra.asm						     Page 1 - 1
 				;//  PARÂMETROS: Não Possui
 				;//  RETORNO: Não Possui
 				;// -------------------------------------------------------------------------
- 00000612			InsertMonstros PROC
- 00000612  BE 00000002 R	     mov esi, OFFSET Map
- 00000617  B9 00000002		     mov ecx, 2
- 0000061C  8A 1D 00000621 R	     mov bl, VazioChar
+ 00000616			InsertMonstros PROC
+ 00000616  BE 00000002 R	     mov esi, OFFSET Map
+ 0000061B  B9 00000005		     mov ecx, 5
+ 00000620  8A 1D 00000621 R	     mov bl, VazioChar
 
- 00000622			random:
- 00000622  B8 00000619		     mov eax, 1561
- 00000627  E8 00000000 E	     call RandomRange
- 0000062C  8A 14 06		     mov dl, [esi+eax]
- 0000062F  3A D3		     cmp dl, bl
- 00000631  75 EF		     jne random
+ 00000626			random:
+ 00000626  B8 00000619		     mov eax, 1561
+ 0000062B  E8 00000000 E	     call RandomRange
+ 00000630  8A 14 06		     mov dl, [esi+eax]
+ 00000633  3A D3		     cmp dl, bl
+ 00000635  75 EF		     jne random
 
- 00000633			addMonstro:
- 00000633  8A 15 00000623 R	     mov dl, MonstroChar
- 00000639  88 14 06		     mov [esi+eax], dl
- 0000063C  E2 E4		     loop random
+ 00000637			addMonstro:
+ 00000637  8A 15 00000623 R	     mov dl, MonstroChar
+ 0000063D  88 14 06		     mov [esi+eax], dl
+ 00000640  E2 E4		     loop random
 
- 0000063E  C3			     ret
- 0000063F			InsertMonstros ENDP
+ 00000642  C3			     ret
+ 00000643			InsertMonstros ENDP
 
 				;// -------------------------------------------------------------------------
 				;//  PROCEDIMENTO: mainGame
@@ -1765,42 +1767,42 @@ MASMorra.asm						     Page 1 - 1
 				;//  PARÂMETROS: Não Possui
 				;//  RETORNO: Não Possui
 				;// -------------------------------------------------------------------------
- 0000063F			MainGame PROC
+ 00000643			MainGame PROC
 				     
- 0000063F			InitAll:
+ 00000643			InitAll:
 				     ;// Reseta variáveis
- 0000063F  C6 05 00000624 R	     mov Level, 1
+ 00000643  C6 05 00000624 R	     mov Level, 1
 	   01
- 00000646  66| C7 05		     mov Health, 10
+ 0000064A  66| C7 05		     mov Health, 10
 	   0000062E R
 	   000A
- 0000064F  66| C7 05		     mov Gold, 0
+ 00000653  66| C7 05		     mov Gold, 0
 	   00000643 R
 	   0000
 
- 00000658			InitLevel:
- 00000658  E8 FFFFFAD9		     call LimpaTela;// Limpa a tela
- 0000065D  E8 FFFFFB2B		     call drawBordas;// Desenha as bordas do jogo
- 00000662  E8 FFFFFD7D		     call ResetMapa;// Reseta o mapa
- 00000667  E8 FFFFFD9A		     call GeraMapa;// Gera um novo mapa
+ 0000065C			InitLevel:
+ 0000065C  E8 FFFFFAD5		     call LimpaTela;// Limpa a tela
+ 00000661  E8 FFFFFB27		     call drawBordas;// Desenha as bordas do jogo
+ 00000666  E8 FFFFFD7D		     call ResetMapa;// Reseta o mapa
+ 0000066B  E8 FFFFFD9A		     call GeraMapa;// Gera um novo mapa
 
- 0000066C			gameloop:
- 0000066C  E8 FFFFFCC3		     call PrintMapa;// Desenha o mapa
- 00000671  E8 FFFFFC51		     call drawStatus;// Escreve os status
- 00000676  E8 0000001B		     call PlayerMove
- 0000067B  80 3D 00000625 R	     cmp inStairs, 0
+ 00000670			gameloop:
+ 00000670  E8 FFFFFCBF		     call PrintMapa;// Desenha o mapa
+ 00000675  E8 FFFFFC4D		     call drawStatus;// Escreve os status
+ 0000067A  E8 0000001B		     call PlayerMove
+ 0000067F  80 3D 00000625 R	     cmp inStairs, 0
 	   00
- 00000682  75 02		     jne NextLevel
- 00000684  EB E6		     jmp gameloop
+ 00000686  75 02		     jne NextLevel
+ 00000688  EB E6		     jmp gameloop
 
- 00000686			NextLevel:
- 00000686  C6 05 00000625 R	     mov inStairs, 0
+ 0000068A			NextLevel:
+ 0000068A  C6 05 00000625 R	     mov inStairs, 0
 	   00
- 0000068D  FE 05 00000624 R	     inc Level
- 00000693  EB C3		     jmp InitLevel
+ 00000691  FE 05 00000624 R	     inc Level
+ 00000697  EB C3		     jmp InitLevel
 				     
- 00000695  C3			     ret
- 00000696			MainGame ENDP
+ 00000699  C3			     ret
+ 0000069A			MainGame ENDP
 
 				;// -------------------------------------------------------------------------
 				;//  PROCEDIMENTO: PlayerMove
@@ -1809,229 +1811,229 @@ MASMorra.asm						     Page 1 - 1
 				;//  PARÂMETROS: Não Possui
 				;//  RETORNO: Não Possui
 				;// -------------------------------------------------------------------------
- 00000696			PlayerMove PROC uses eax esi edx ebx 
+ 0000069A			PlayerMove PROC uses eax esi edx ebx 
 				         
- 00000696  50		   *	    push   eax
- 00000697  56		   *	    push   esi
- 00000698  52		   *	    push   edx
- 00000699  53		   *	    push   ebx
- 0000069A  BE 00000002 R	     mov esi, OFFSET Map    
+ 0000069A  50		   *	    push   eax
+ 0000069B  56		   *	    push   esi
+ 0000069C  52		   *	    push   edx
+ 0000069D  53		   *	    push   ebx
+ 0000069E  BE 00000002 R	     mov esi, OFFSET Map    
 
- 0000069F			KeyWait:
- 0000069F  B8 00000032		     mov eax, 50
- 000006A4  E8 00000000 E	     call Delay; // Sleep para timeslice
- 000006A9  E8 00000000 E	     call ReadKey
- 000006AE  74 EF		     jz KeyWait
+ 000006A3			KeyWait:
+ 000006A3  B8 00000032		     mov eax, 50
+ 000006A8  E8 00000000 E	     call Delay; // Sleep para timeslice
+ 000006AD  E8 00000000 E	     call ReadKey
+ 000006B2  74 EF		     jz KeyWait
 
- 000006B0  66| 83 FA 26		     cmp  dx, 0026h
- 000006B4  74 18		     je KeyUp
- 000006B6  66| 83 FA 25		     cmp dx, 0025h
- 000006BA  74 6E		     je KeyLeft
- 000006BC  66| 83 FA 27		     cmp dx, 0027h
- 000006C0  0F 84 0000009F	     je KeyRight
- 000006C6  66| 83 FA 28		     cmp dx, 0028h
- 000006CA  74 30		     je KeyDown
- 000006CC  EB D1		     jmp KeyWait
+ 000006B4  66| 83 FA 26		     cmp  dx, 0026h
+ 000006B8  74 18		     je KeyUp
+ 000006BA  66| 83 FA 25		     cmp dx, 0025h
+ 000006BE  74 6E		     je KeyLeft
+ 000006C0  66| 83 FA 27		     cmp dx, 0027h
+ 000006C4  0F 84 0000009F	     je KeyRight
+ 000006CA  66| 83 FA 28		     cmp dx, 0028h
+ 000006CE  74 30		     je KeyDown
+ 000006D0  EB D1		     jmp KeyWait
 
- 000006CE			KeyUp:
- 000006CE  66| A1		     mov ax, posHeroi
+ 000006D2			KeyUp:
+ 000006D2  66| A1		     mov ax, posHeroi
 	   0000061A R
- 000006D4  66| 83 F8 4D		     cmp ax, 77
- 000006D8  76 C5		     jbe KeyWait      ;// Aguarda outra tecla caso inválido
+ 000006D8  66| 83 F8 4D		     cmp ax, 77
+ 000006DC  76 C5		     jbe KeyWait      ;// Aguarda outra tecla caso inválido
 
 				     ;// Checa se existe uma parede:
- 000006DA  83 E8 4E		     sub eax, 78
- 000006DD  8A 1D 00000620 R	     mov bl, paredeChar
- 000006E3  38 1C 06		     cmp [esi + eax], bl
- 000006E6  74 B7		     je KeyWait
+ 000006DE  83 E8 4E		     sub eax, 78
+ 000006E1  8A 1D 00000620 R	     mov bl, paredeChar
+ 000006E7  38 1C 06		     cmp [esi + eax], bl
+ 000006EA  74 B7		     je KeyWait
 				     ;// Move caso válido
- 000006E8  8A 1D 00000621 R	     mov bl, vazioChar
- 000006EE  38 1C 06		     cmp[esi + eax], bl
- 000006F1  0F 84 000000D8	     je MovUp
+ 000006EC  8A 1D 00000621 R	     mov bl, vazioChar
+ 000006F2  38 1C 06		     cmp[esi + eax], bl
+ 000006F5  0F 84 000000D8	     je MovUp
 				     ;// Outras colisões
- 000006F7  E9 000000A6		     jmp colisao
+ 000006FB  E9 000000A6		     jmp colisao
 
- 000006FC			KeyDown:
- 000006FC  66| A1		     mov ax, posHeroi
+ 00000700			KeyDown:
+ 00000700  66| A1		     mov ax, posHeroi
 	   0000061A R
- 00000702  66| BB 05CA		     mov bx, 1482
- 00000706  66| 3B C3		     cmp ax, bx
- 00000709  73 94		     jae KeyWait;   // Aguarda outra tecla caso inválido
+ 00000706  66| BB 05CA		     mov bx, 1482
+ 0000070A  66| 3B C3		     cmp ax, bx
+ 0000070D  73 94		     jae KeyWait;   // Aguarda outra tecla caso inválido
 
 				     ;// Checa se existe uma parede:
- 0000070B  83 C0 4E		     add eax, 78
- 0000070E  8A 1D 00000620 R	     mov bl, paredeChar
- 00000714  38 1C 06		     cmp[esi + eax], bl
- 00000717  74 86		     je KeyWait
+ 0000070F  83 C0 4E		     add eax, 78
+ 00000712  8A 1D 00000620 R	     mov bl, paredeChar
+ 00000718  38 1C 06		     cmp[esi + eax], bl
+ 0000071B  74 86		     je KeyWait
 				     ;// Move caso válido
- 00000719  8A 1D 00000621 R	     mov bl, vazioChar
- 0000071F  38 1C 06		     cmp[esi + eax], bl
- 00000722  0F 84 000000CD	     je MovDown
- 00000728  EB 78		     jmp colisao
+ 0000071D  8A 1D 00000621 R	     mov bl, vazioChar
+ 00000723  38 1C 06		     cmp[esi + eax], bl
+ 00000726  0F 84 000000CD	     je MovDown
+ 0000072C  EB 78		     jmp colisao
 
- 0000072A			KeyLeft:
- 0000072A  66| A1		     mov ax, PosHeroi
+ 0000072E			KeyLeft:
+ 0000072E  66| A1		     mov ax, PosHeroi
 	   0000061A R
- 00000730  B3 4E		     mov bl, 78
- 00000732  F6 F3		     div bl             ;// pos/78 - Resto fica em AH
- 00000734  80 FC 00		     cmp ah, 0
- 00000737  0F 84 FFFFFF62	     je KeyWait         ;// se pos%78 = 0, então não é valido
+ 00000734  B3 4E		     mov bl, 78
+ 00000736  F6 F3		     div bl             ;// pos/78 - Resto fica em AH
+ 00000738  80 FC 00		     cmp ah, 0
+ 0000073B  0F 84 FFFFFF62	     je KeyWait         ;// se pos%78 = 0, então não é valido
 
- 0000073D  66| A1		     mov ax, posHeroi
+ 00000741  66| A1		     mov ax, posHeroi
 	   0000061A R
 				     ;// Checa se existe uma parede:
- 00000743  66| 48		     dec ax
- 00000745  8A 1D 00000620 R	     mov bl, paredeChar
- 0000074B  38 1C 06		     cmp [esi+eax], bl
- 0000074E  0F 84 FFFFFF4B	     je KeyWait
+ 00000747  66| 48		     dec ax
+ 00000749  8A 1D 00000620 R	     mov bl, paredeChar
+ 0000074F  38 1C 06		     cmp [esi+eax], bl
+ 00000752  0F 84 FFFFFF4B	     je KeyWait
 				     ;// Move caso válido
- 00000754  8A 1D 00000621 R	     mov bl, vazioChar
- 0000075A  38 1C 06		     cmp [esi + eax], bl
- 0000075D  0F 84 000000B8	     je MovLeft
- 00000763  EB 3D		     jmp colisao
+ 00000758  8A 1D 00000621 R	     mov bl, vazioChar
+ 0000075E  38 1C 06		     cmp [esi + eax], bl
+ 00000761  0F 84 000000B8	     je MovLeft
+ 00000767  EB 3D		     jmp colisao
 
- 00000765			KeyRight:
- 00000765  66| A1		     mov ax, PosHeroi
+ 00000769			KeyRight:
+ 00000769  66| A1		     mov ax, PosHeroi
 	   0000061A R
- 0000076B  66| 40		     inc ax         ;// ax = pos+1
- 0000076D  B3 4E		     mov bl, 78
- 0000076F  F6 F3		     div bl         ;// (pos+1)/78 - Resto fica em AH
- 00000771  80 FC 00		     cmp ah, 0
- 00000774  0F 84 FFFFFF25	     je KeyWait     ;// se (pos+1)%78 = 0, então não é valido
+ 0000076F  66| 40		     inc ax         ;// ax = pos+1
+ 00000771  B3 4E		     mov bl, 78
+ 00000773  F6 F3		     div bl         ;// (pos+1)/78 - Resto fica em AH
+ 00000775  80 FC 00		     cmp ah, 0
+ 00000778  0F 84 FFFFFF25	     je KeyWait     ;// se (pos+1)%78 = 0, então não é valido
 
- 0000077A  66| A1		     mov ax, posHeroi
+ 0000077E  66| A1		     mov ax, posHeroi
 	   0000061A R
 				     ;// Checa se existe uma parede:
- 00000780  66| 40		     inc ax
- 00000782  8A 1D 00000620 R	     mov bl, paredeChar
- 00000788  38 1C 06		     cmp[esi + eax], bl
- 0000078B  0F 84 FFFFFF0E	     je KeyWait
+ 00000784  66| 40		     inc ax
+ 00000786  8A 1D 00000620 R	     mov bl, paredeChar
+ 0000078C  38 1C 06		     cmp[esi + eax], bl
+ 0000078F  0F 84 FFFFFF0E	     je KeyWait
 				     ;// Move caso válido
- 00000791  8A 1D 00000621 R	     mov bl, vazioChar
- 00000797  38 1C 06		     cmp[esi + eax], bl
- 0000079A  0F 84 000000A0	     je MovRight
- 000007A0  EB 00		     jmp colisao
+ 00000795  8A 1D 00000621 R	     mov bl, vazioChar
+ 0000079B  38 1C 06		     cmp[esi + eax], bl
+ 0000079E  0F 84 000000A0	     je MovRight
+ 000007A4  EB 00		     jmp colisao
 
- 000007A2			Colisao:
+ 000007A6			Colisao:
 				     ;// Colisão com escada
- 000007A2  8A 1D 0000061F R	     mov bl, EscadaChar
- 000007A8  38 1C 06		     cmp[esi + eax], bl
- 000007AB  0F 84 000000B4	     je colisaoEscada
+ 000007A6  8A 1D 0000061F R	     mov bl, EscadaChar
+ 000007AC  38 1C 06		     cmp[esi + eax], bl
+ 000007AF  0F 84 000000B4	     je colisaoEscada
 				     ;// Colisão com bau
- 000007B1  8A 1D 00000622 R	     mov bl, BauChar
- 000007B7  38 1C 06		     cmp[esi + eax], bl
- 000007BA  0F 84 000000B1	     je colisaoBau
+ 000007B5  8A 1D 00000622 R	     mov bl, BauChar
+ 000007BB  38 1C 06		     cmp[esi + eax], bl
+ 000007BE  0F 84 000000AE	     je colisaoBau
 					;// Colisão com monstro
- 000007C0  8A 1D 00000623 R	     mov bl, MonstroChar
- 000007C6  38 1C 06		     cmp[esi + eax], bl
- 000007C9  0F 84 000000BF	     je colisaoMonstro
+ 000007C4  8A 1D 00000623 R	     mov bl, MonstroChar
+ 000007CA  38 1C 06		     cmp[esi + eax], bl
+ 000007CD  0F 84 000000BC	     je colisaoMonstro
 					
-				     ;// -------------------------- INSERIR COLISÕES
 
- 000007CF			MovUp:
- 000007CF  66| 83 2D		     sub posHeroi, 78
+ 000007D3			MovUp:
+ 000007D3  66| 83 2D		     sub posHeroi, 78
 	   0000061A R 4E
- 000007D7  66| A1		     mov ax, posHeroi
+ 000007DB  66| A1		     mov ax, posHeroi
 	   0000061A R
- 000007DD  8A 1D 00000621 R	     mov bl, vazioChar
- 000007E3  88 5C 06 4E		     mov [esi + eax + 78], bl   ;// Limpa posição atual
- 000007E7  8A 1D 0000061C R	     mov bl, HeroiChar
- 000007ED  88 1C 06		     mov [esi + eax], bl ; // Adiciona o heroi na nova posição
- 000007F0  E9 000000FC		     jmp EndInput
+ 000007E1  8A 1D 00000621 R	     mov bl, vazioChar
+ 000007E7  88 5C 06 4E		     mov [esi + eax + 78], bl   ;// Limpa posição atual
+ 000007EB  8A 1D 0000061C R	     mov bl, HeroiChar
+ 000007F1  88 1C 06		     mov [esi + eax], bl ; // Adiciona o heroi na nova posição
+ 000007F4  E9 000000F7		     jmp EndInput
 
- 000007F5			MovDown :
- 000007F5  66| 83 05		     add posHeroi, 78
+ 000007F9			MovDown :
+ 000007F9  66| 83 05		     add posHeroi, 78
 	   0000061A R 4E
- 000007FD  66| A1		     mov ax, posHeroi
+ 00000801  66| A1		     mov ax, posHeroi
 	   0000061A R
- 00000803  8A 1D 00000621 R	     mov bl, vazioChar
- 00000809  88 5C 06 B2		     mov[esi + eax - 78], bl   ;// Limpa posição atual
- 0000080D  8A 1D 0000061C R	     mov bl, HeroiChar
- 00000813  88 1C 06		     mov[esi + eax], bl ; // Adiciona o heroi na nova posição
- 00000816  E9 000000D6		     jmp EndInput
+ 00000807  8A 1D 00000621 R	     mov bl, vazioChar
+ 0000080D  88 5C 06 B2		     mov[esi + eax - 78], bl   ;// Limpa posição atual
+ 00000811  8A 1D 0000061C R	     mov bl, HeroiChar
+ 00000817  88 1C 06		     mov[esi + eax], bl ; // Adiciona o heroi na nova posição
+ 0000081A  E9 000000D1		     jmp EndInput
 
- 0000081B			MovLeft :
- 0000081B  66| FF 0D		     dec posHeroi
+ 0000081F			MovLeft :
+ 0000081F  66| FF 0D		     dec posHeroi
 	   0000061A R
- 00000822  66| A1		     mov ax, posHeroi
+ 00000826  66| A1		     mov ax, posHeroi
 	   0000061A R
- 00000828  8A 1D 00000621 R	     mov bl, vazioChar
- 0000082E  88 5C 06 01		     mov[esi + eax + 1], bl;// Limpa posição atual
- 00000832  8A 1D 0000061C R	     mov bl, HeroiChar
- 00000838  88 1C 06		     mov[esi + eax], bl; // Adiciona o heroi na nova posição
- 0000083B  E9 000000B1		     jmp EndInput
+ 0000082C  8A 1D 00000621 R	     mov bl, vazioChar
+ 00000832  88 5C 06 01		     mov[esi + eax + 1], bl;// Limpa posição atual
+ 00000836  8A 1D 0000061C R	     mov bl, HeroiChar
+ 0000083C  88 1C 06		     mov[esi + eax], bl; // Adiciona o heroi na nova posição
+ 0000083F  E9 000000AC		     jmp EndInput
 
- 00000840			MovRight :
- 00000840  66| FF 05		     inc posHeroi
+ 00000844			MovRight :
+ 00000844  66| FF 05		     inc posHeroi
 	   0000061A R
- 00000847  66| A1		     mov ax, posHeroi
+ 0000084B  66| A1		     mov ax, posHeroi
 	   0000061A R
- 0000084D  8A 1D 00000621 R	     mov bl, vazioChar
- 00000853  88 5C 06 FF		     mov[esi + eax - 1], bl;// Limpa posição atual
- 00000857  8A 1D 0000061C R	     mov bl, HeroiChar
- 0000085D  88 1C 06		     mov[esi + eax], bl; // Adiciona o heroi na nova posição
- 00000860  E9 0000008C		     jmp EndInput
+ 00000851  8A 1D 00000621 R	     mov bl, vazioChar
+ 00000857  88 5C 06 FF		     mov[esi + eax - 1], bl;// Limpa posição atual
+ 0000085B  8A 1D 0000061C R	     mov bl, HeroiChar
+ 00000861  88 1C 06		     mov[esi + eax], bl; // Adiciona o heroi na nova posição
+ 00000864  E9 00000087		     jmp EndInput
 
- 00000865			colisaoEscada:
- 00000865  C6 05 00000625 R	     mov inStairs, 1
+ 00000869			colisaoEscada:
+ 00000869  C6 05 00000625 R	     mov inStairs, 1
 	   01
- 0000086C  E9 00000080		     jmp EndInput
+ 00000870  EB 7E		     jmp EndInput
 
- 00000871			colisaoBau:
- 00000871  8A 1D 00000621 R	     mov bl, VazioChar
- 00000877  88 1C 06		     mov [esi+eax], bl ;// Limpa a posição do bau
- 0000087A  B8 00000002		     mov eax, 2
- 0000087F  E8 00000000 E	     call RandomRange
+ 00000872			colisaoBau:
+ 00000872  8A 1D 00000621 R	     mov bl, VazioChar
+ 00000878  88 1C 06		     mov [esi+eax], bl ;// Limpa a posição do bau
+ 0000087B  B8 00000002		     mov eax, 2
+ 00000880  E8 00000000 E	     call RandomRange
 				     ;// Adiciona Ouro
- 00000884  83 F8 00		     cmp eax, 0
- 00000887  74 1A		     je addGold
+ 00000885  83 F8 00		     cmp eax, 0
+ 00000888  74 32		     je addGold
 				     ;// Adiciona vida
- 00000889  83 F8 01		     cmp eax, 1
- 0000088C  74 2F		     je addHealth
+ 0000088A  83 F8 01		     cmp eax, 1
+ 0000088D  74 47		     je addHealth
 
- 0000088E			colisaoMonstro:
- 0000088E  8A 1D 00000621 R	     mov bl, VazioChar
- 00000894  B8 00000002		     mov eax, 2
- 00000899  E8 00000000 E		call RandomRange
-				     ;// Diminui vida
- 0000089E  83 F8 00		     cmp eax, 0
- 000008A1  74 34		     je subHealth
-				     
- 000008A3			addGold:
- 000008A3  B8 00000003		     mov eax, 3
- 000008A8  E8 00000000 E	     call RandomRange
- 000008AD  40			     inc eax
- 000008AE  F6 25 00000624 R	     mul Level
- 000008B4  66| 01 05		     add Gold, ax
+ 0000088F			colisaoMonstro:
+ 0000088F  0F B6 1D		     movzx ebx, Level
+	   00000624 R
+ 00000896  66| 39 1D		     cmp Health, bx   ;// compara a vida atual com o dano (dano=level)
+	   0000062E R
+ 0000089D  76 12		     jbe Fatal
+ 0000089F  66| 29 1D		     sub Health, bx
+	   0000062E R
+ 000008A6  8A 1D 00000621 R	     mov bl, VazioChar
+ 000008AC  88 1C 06		     mov [esi+eax], bl ;// Remove o monstro
+ 000008AF  EB 3F		     jmp EndInput
+ 000008B1			fatal:
+ 000008B1  66| C7 05		     mov Health, 0
+	   0000062E R
+	   0000
+ 000008BA  EB 34		     jmp EndInput
+
+ 000008BC			addGold:
+ 000008BC  B8 00000003		     mov eax, 3          
+ 000008C1  E8 00000000 E	     call RandomRange    
+ 000008C6  40			     inc eax             ;// gera um número aleatório entre 1 e 3
+ 000008C7  F6 25 00000624 R	     mul Level           ;// multiplica pelo level e adiciona no ouro
+ 000008CD  66| 01 05		     add Gold, ax
 	   00000643 R
- 000008BB  EB 34		     jmp EndInput
+ 000008D4  EB 1A		     jmp EndInput
 
- 000008BD			addHealth:
- 000008BD  A0 00000624 R	     mov al, Level
- 000008C2  E8 00000000 E	     call RandomRange
- 000008C7  40			     inc eax
- 000008C8  03 05 00000624 R	     add eax, dword PTR Level
- 000008CE  66| 01 05		     add Health, ax
+ 000008D6			addHealth:
+ 000008D6  A0 00000624 R	     mov al, Level
+ 000008DB  E8 00000000 E	     call RandomRange              ;// gera um numero aleatorio entre 1 e o Level atual
+ 000008E0  40			     inc eax
+ 000008E1  03 05 00000624 R	     add eax, dword PTR Level      ;// adiciona o level atual e adiciona o resultado como vida
+ 000008E7  66| 01 05		     add Health, ax
 	   0000062E R
- 000008D5  EB 1A		     jmp EndInput
+ 000008EE  EB 00		     jmp EndInput
 
- 000008D7			subHealth:
- 000008D7  A0 00000624 R	     mov al, Level
- 000008DC  E8 00000000 E	     call RandomRange
- 000008E1  40			     inc eax
- 000008E2  03 05 00000624 R	     add eax, dword PTR Level
- 000008E8  66| 29 05		     sub Health, ax
-	   0000062E R
- 000008EF  EB 00		     jmp EndInput
 
- 000008F1			EndInput:     
+ 000008F0			EndInput:     
 				     ret
- 000008F1  5B		   *	    pop    ebx
- 000008F2  5A		   *	    pop    edx
- 000008F3  5E		   *	    pop    esi
- 000008F4  58		   *	    pop    eax
- 000008F5  C3		   *	    ret    00000h
- 000008F6			PlayerMove ENDP
+ 000008F0  5B		   *	    pop    ebx
+ 000008F1  5A		   *	    pop    edx
+ 000008F2  5E		   *	    pop    esi
+ 000008F3  58		   *	    pop    eax
+ 000008F4  C3		   *	    ret    00000h
+ 000008F5			PlayerMove ENDP
 
 				;// -------------------------------------------------------------------------
 				;//  PROCEDIMENTO: main
@@ -2040,18 +2042,18 @@ MASMorra.asm						     Page 1 - 1
 				;//  PARÂMETROS: Não Possui
 				;//  RETORNO: Não Possui
 				;// -------------------------------------------------------------------------
- 000008F6			main PROC
- 000008F6  E8 00000000 E	     call Randomize;// Randomiza a seed
+ 000008F5			main PROC
+ 000008F5  E8 00000000 E	     call Randomize;// Randomiza a seed
 					invoke SetConsoleTitle, OFFSET ctitle	;// Muda o título do terminal
- 000008FB  68 00000660 R   *	    push   dword  ptr OFFSET FLAT: ctitle
- 00000900  E8 00000000 E   *	    call   SetConsoleTitleA
- 00000905  E8 FFFFF6F6			call HideCursor							;// Esconde o cursor piscante
- 0000090A  B1 00			mov cl, 0								;// Inicia o seletor do menu na primeira opção
- 0000090C  E8 FFFFF726			call ShowMenu							;// Mostra o menu principal
+ 000008FA  68 00000660 R   *	    push   dword  ptr OFFSET FLAT: ctitle
+ 000008FF  E8 00000000 E   *	    call   SetConsoleTitleA
+ 00000904  E8 FFFFF6F7			call HideCursor							;// Esconde o cursor piscante
+ 00000909  B1 00			mov cl, 0								;// Inicia o seletor do menu na primeira opção
+ 0000090B  E8 FFFFF727			call ShowMenu							;// Mostra o menu principal
 
- 00000911			main ENDP
+ 00000910			main ENDP
 				END main
-Microsoft (R) Macro Assembler Version 14.14.26431.0	    07/01/18 15:36:33
+Microsoft (R) Macro Assembler Version 14.14.26429.4	    07/01/18 21:09:52
 MASMorra.asm						     Symbols 2 - 1
 
 
@@ -2146,7 +2148,7 @@ Segments and Groups:
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
 _DATA  . . . . . . . . . . . . .	32 Bit	 00001874 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 00000911 Para	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000910 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
@@ -2174,21 +2176,21 @@ FileTimeToDosDateTime  . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 FileTimeToSystemTime . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 FlushConsoleInputBuffer  . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 FormatMessageA . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-GeraMapa . . . . . . . . . . . .	P Near	 00000406 _TEXT	Length= 000001DF Public STDCALL
-  WL1  . . . . . . . . . . . . .	L Near	 0000044E _TEXT	
-  MoveNorth  . . . . . . . . . .	L Near	 000004B1 _TEXT	
-  MNC  . . . . . . . . . . . . .	L Near	 000004B9 _TEXT	
-  NowriteN . . . . . . . . . . .	L Near	 000004E0 _TEXT	
-  MoveEast . . . . . . . . . . .	L Near	 000004E7 _TEXT	
-  MEC  . . . . . . . . . . . . .	L Near	 000004EF _TEXT	
-  NowriteE . . . . . . . . . . .	L Near	 00000527 _TEXT	
-  MoveSouth  . . . . . . . . . .	L Near	 0000052E _TEXT	
-  MSC  . . . . . . . . . . . . .	L Near	 00000536 _TEXT	
-  NowriteS . . . . . . . . . . .	L Near	 00000565 _TEXT	
-  MoveWest . . . . . . . . . . .	L Near	 0000056C _TEXT	
-  MWC  . . . . . . . . . . . . .	L Near	 00000574 _TEXT	
-  NowriteW . . . . . . . . . . .	L Near	 000005AA _TEXT	
-  Fim  . . . . . . . . . . . . .	L Near	 000005B1 _TEXT	
+GeraMapa . . . . . . . . . . . .	P Near	 0000040A _TEXT	Length= 000001DF Public STDCALL
+  WL1  . . . . . . . . . . . . .	L Near	 00000452 _TEXT	
+  MoveNorth  . . . . . . . . . .	L Near	 000004B5 _TEXT	
+  MNC  . . . . . . . . . . . . .	L Near	 000004BD _TEXT	
+  NowriteN . . . . . . . . . . .	L Near	 000004E4 _TEXT	
+  MoveEast . . . . . . . . . . .	L Near	 000004EB _TEXT	
+  MEC  . . . . . . . . . . . . .	L Near	 000004F3 _TEXT	
+  NowriteE . . . . . . . . . . .	L Near	 0000052B _TEXT	
+  MoveSouth  . . . . . . . . . .	L Near	 00000532 _TEXT	
+  MSC  . . . . . . . . . . . . .	L Near	 0000053A _TEXT	
+  NowriteS . . . . . . . . . . .	L Near	 00000569 _TEXT	
+  MoveWest . . . . . . . . . . .	L Near	 00000570 _TEXT	
+  MWC  . . . . . . . . . . . . .	L Near	 00000578 _TEXT	
+  NowriteW . . . . . . . . . . .	L Near	 000005AE _TEXT	
+  Fim  . . . . . . . . . . . . .	L Near	 000005B5 _TEXT	
 GetCommandLineA  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 GetCommandTail . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 GetConsoleCP . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -2215,22 +2217,22 @@ HeapDestroy  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 HeapFree . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 HeapSize . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 HideCursor . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000037 Public STDCALL
-InsertBaus . . . . . . . . . . .	P Near	 000005E5 _TEXT	Length= 0000002D Public STDCALL
-  random . . . . . . . . . . . .	L Near	 000005F5 _TEXT	
-  addBau . . . . . . . . . . . .	L Near	 00000606 _TEXT	
-InsertMonstros . . . . . . . . .	P Near	 00000612 _TEXT	Length= 0000002D Public STDCALL
-  random . . . . . . . . . . . .	L Near	 00000622 _TEXT	
-  addMonstro . . . . . . . . . .	L Near	 00000633 _TEXT	
+InsertBaus . . . . . . . . . . .	P Near	 000005E9 _TEXT	Length= 0000002D Public STDCALL
+  random . . . . . . . . . . . .	L Near	 000005F9 _TEXT	
+  addBau . . . . . . . . . . . .	L Near	 0000060A _TEXT	
+InsertMonstros . . . . . . . . .	P Near	 00000616 _TEXT	Length= 0000002D Public STDCALL
+  random . . . . . . . . . . . .	L Near	 00000626 _TEXT	
+  addMonstro . . . . . . . . . .	L Near	 00000637 _TEXT	
 IsDigit  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 LimpaTela  . . . . . . . . . . .	P Near	 00000136 _TEXT	Length= 00000057 Public STDCALL
   LLP1 . . . . . . . . . . . . .	L Near	 00000159 _TEXT	
   LLP2 . . . . . . . . . . . . .	L Near	 00000168 _TEXT	
 LocalFree  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-MainGame . . . . . . . . . . . .	P Near	 0000063F _TEXT	Length= 00000057 Public STDCALL
-  InitAll  . . . . . . . . . . .	L Near	 0000063F _TEXT	
-  InitLevel  . . . . . . . . . .	L Near	 00000658 _TEXT	
-  gameloop . . . . . . . . . . .	L Near	 0000066C _TEXT	
-  NextLevel  . . . . . . . . . .	L Near	 00000686 _TEXT	
+MainGame . . . . . . . . . . . .	P Near	 00000643 _TEXT	Length= 00000057 Public STDCALL
+  InitAll  . . . . . . . . . . .	L Near	 00000643 _TEXT	
+  InitLevel  . . . . . . . . . .	L Near	 0000065C _TEXT	
+  gameloop . . . . . . . . . . .	L Near	 00000670 _TEXT	
+  NextLevel  . . . . . . . . . .	L Near	 0000068A _TEXT	
 MessageBoxA  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 MsgBoxAsk  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 MsgBox . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -2238,33 +2240,33 @@ OpenInputFile  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 ParseDecimal32 . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ParseInteger32 . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 PeekConsoleInputA  . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-PlayerMove . . . . . . . . . . .	P Near	 00000696 _TEXT	Length= 00000260 Public STDCALL
-  KeyWait  . . . . . . . . . . .	L Near	 0000069F _TEXT	
-  KeyUp  . . . . . . . . . . . .	L Near	 000006CE _TEXT	
-  KeyDown  . . . . . . . . . . .	L Near	 000006FC _TEXT	
-  KeyLeft  . . . . . . . . . . .	L Near	 0000072A _TEXT	
-  KeyRight . . . . . . . . . . .	L Near	 00000765 _TEXT	
-  Colisao  . . . . . . . . . . .	L Near	 000007A2 _TEXT	
-  MovUp  . . . . . . . . . . . .	L Near	 000007CF _TEXT	
-  MovDown  . . . . . . . . . . .	L Near	 000007F5 _TEXT	
-  MovLeft  . . . . . . . . . . .	L Near	 0000081B _TEXT	
-  MovRight . . . . . . . . . . .	L Near	 00000840 _TEXT	
-  colisaoEscada  . . . . . . . .	L Near	 00000865 _TEXT	
-  colisaoBau . . . . . . . . . .	L Near	 00000871 _TEXT	
-  colisaoMonstro . . . . . . . .	L Near	 0000088E _TEXT	
-  addGold  . . . . . . . . . . .	L Near	 000008A3 _TEXT	
-  addHealth  . . . . . . . . . .	L Near	 000008BD _TEXT	
-  subHealth  . . . . . . . . . .	L Near	 000008D7 _TEXT	
-  EndInput . . . . . . . . . . .	L Near	 000008F1 _TEXT	
-PrintMapa  . . . . . . . . . . .	P Near	 00000334 _TEXT	Length= 000000B0 Public STDCALL
-  L1 . . . . . . . . . . . . . .	L Near	 00000355 _TEXT	
-  L2 . . . . . . . . . . . . . .	L Near	 00000363 _TEXT	
-  Default  . . . . . . . . . . .	L Near	 00000390 _TEXT	
-  Hero . . . . . . . . . . . . .	L Near	 00000397 _TEXT	
-  Escada . . . . . . . . . . . .	L Near	 000003A5 _TEXT	
-  Bau  . . . . . . . . . . . . .	L Near	 000003B3 _TEXT	
-  Montro . . . . . . . . . . . .	L Near	 000003C1 _TEXT	
-  DefLoop  . . . . . . . . . . .	L Near	 000003CF _TEXT	
+PlayerMove . . . . . . . . . . .	P Near	 0000069A _TEXT	Length= 0000025B Public STDCALL
+  KeyWait  . . . . . . . . . . .	L Near	 000006A3 _TEXT	
+  KeyUp  . . . . . . . . . . . .	L Near	 000006D2 _TEXT	
+  KeyDown  . . . . . . . . . . .	L Near	 00000700 _TEXT	
+  KeyLeft  . . . . . . . . . . .	L Near	 0000072E _TEXT	
+  KeyRight . . . . . . . . . . .	L Near	 00000769 _TEXT	
+  Colisao  . . . . . . . . . . .	L Near	 000007A6 _TEXT	
+  MovUp  . . . . . . . . . . . .	L Near	 000007D3 _TEXT	
+  MovDown  . . . . . . . . . . .	L Near	 000007F9 _TEXT	
+  MovLeft  . . . . . . . . . . .	L Near	 0000081F _TEXT	
+  MovRight . . . . . . . . . . .	L Near	 00000844 _TEXT	
+  colisaoEscada  . . . . . . . .	L Near	 00000869 _TEXT	
+  colisaoBau . . . . . . . . . .	L Near	 00000872 _TEXT	
+  colisaoMonstro . . . . . . . .	L Near	 0000088F _TEXT	
+  fatal  . . . . . . . . . . . .	L Near	 000008B1 _TEXT	
+  addGold  . . . . . . . . . . .	L Near	 000008BC _TEXT	
+  addHealth  . . . . . . . . . .	L Near	 000008D6 _TEXT	
+  EndInput . . . . . . . . . . .	L Near	 000008F0 _TEXT	
+PrintMapa  . . . . . . . . . . .	P Near	 00000334 _TEXT	Length= 000000B4 Public STDCALL
+  L1 . . . . . . . . . . . . . .	L Near	 00000356 _TEXT	
+  L2 . . . . . . . . . . . . . .	L Near	 00000364 _TEXT	
+  Default  . . . . . . . . . . .	L Near	 00000393 _TEXT	
+  Hero . . . . . . . . . . . . .	L Near	 000003A0 _TEXT	
+  Escada . . . . . . . . . . . .	L Near	 000003AE _TEXT	
+  Bau  . . . . . . . . . . . . .	L Near	 000003BC _TEXT	
+  Monstro  . . . . . . . . . . .	L Near	 000003CA _TEXT	
+  Fim  . . . . . . . . . . . . .	L Near	 000003D8 _TEXT	
 Random32 . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 RandomRange  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 Randomize  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -2280,8 +2282,8 @@ ReadInt  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 ReadKeyFlush . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadKey  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadString . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-ResetMapa  . . . . . . . . . . .	P Near	 000003E4 _TEXT	Length= 00000022 Public STDCALL
-  L1 . . . . . . . . . . . . . .	L Near	 000003F6 _TEXT	
+ResetMapa  . . . . . . . . . . .	P Near	 000003E8 _TEXT	Length= 00000022 Public STDCALL
+  L1 . . . . . . . . . . . . . .	L Near	 000003FA _TEXT	
 SetConsoleCursorInfo . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleCursorPosition . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleMode . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -2331,7 +2333,7 @@ drawBordas . . . . . . . . . . .	P Near	 0000018D _TEXT	Length= 0000013A Public 
   L5 . . . . . . . . . . . . . .	L Near	 00000277 _TEXT	
   L6 . . . . . . . . . . . . . .	L Near	 00000293 _TEXT	
 drawStatus . . . . . . . . . . .	P Near	 000002C7 _TEXT	Length= 0000006D Public STDCALL
-main . . . . . . . . . . . . . .	P Near	 000008F6 _TEXT	Length= 0000001B Public STDCALL
+main . . . . . . . . . . . . . .	P Near	 000008F5 _TEXT	Length= 0000001B Public STDCALL
 printf . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C

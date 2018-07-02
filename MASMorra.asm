@@ -46,6 +46,7 @@ Gold WORD 0
 strGold DB 'GOLD: ',0
 isDead DB 0
 PosMonstro WORD 0   ;// Usado para a movimentação dos monstros
+maxLevel BYTE 20    ;// nivel maximo
 
 ;// -------------------------------------------------------------------------
 ;//  VARIÁVEIS: GERAÇÃO DE MAPAS
@@ -262,6 +263,8 @@ DoMenuSel PROC
 ;// SELEÇÃO DO MENU: Novo Jogo
 opNovoJogo:
           call MainGame
+          mov cl, 0
+          call ShowMenu
 		jmp MenuRetWait 
 ;// SELEÇÃO DO MENU: Conquistas
 opConquistas:
@@ -844,7 +847,7 @@ InsertMonstros ENDP
 ;//  PARÂMETROS: Não Possui
 ;//  RETORNO: Não Possui
 ;// -------------------------------------------------------------------------
-MainGame PROC
+MainGame PROC uses ecx eax
      
 InitAll:
      ;// Reseta variáveis
@@ -879,6 +882,9 @@ gameloop:
 NextLevel:
      mov inStairs, 0 
      inc Level
+     mov al, MaxLevel
+     cmp al, Level
+     je EndGame
      jmp InitLevel
  
 EndGame:
@@ -1109,6 +1115,8 @@ KeyWait:
      je KeyRight
      cmp dx, 0028h
      je KeyDown
+     cmp dx, 0051h
+     je Quit
      jmp KeyWait
 
 KeyUp:
@@ -1281,6 +1289,9 @@ addHealth:
      add Health, ax
      jmp EndInput
 
+Quit:
+     mov isDead, 1
+     jmp EndInput
 
 EndInput:     
      ret
